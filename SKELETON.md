@@ -59,6 +59,28 @@ Core gameplay features include tracking and displaying **user stats** (e.g., win
 
 ### 4. Tech Stack
 
+#### Frontend
+- React/React Native
+
+#### Backend
+- Java
+- Spring Boot
+- REST API 
+- Real-time communication **TBD**
+
+#### Database
+- SQL
+- **Cloud base TBD**
+
+#### Tooling
+- Docker (development consistency)
+- Gitlab (Versioning)
+- Postman (API Testing)
+- JUNIT + Mockito (backend unit/integration tests)
+
+#### Source
+- **Dictionary database TBD**
+
 
 
 
