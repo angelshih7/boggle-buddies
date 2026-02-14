@@ -1,9 +1,3 @@
-Here is where you will explain your plan for the Walking Skeleton.
-
-We will talk more about this in the future. In summary, the Walking Skeleton is a plan for setting up a minimal version of your tech stack. This is less than a MVP (minimum viable product) as this is not meant to be a product. It is to prove that you are able to integrate the three main components of your application: front end, back end, and database. 
-
-To complete the Skeleton you must be able to interact with your front end, have that interaction be sent to your backend, have something be stored in your database, and return a result back to the front end. This feature does not have to be particularly powerful or meaningful, but you must prove that you can communicate between each component of your application.
-
 # Boggle Your Mind Project
 
 ## Project name: Boggle your Mind
@@ -101,6 +95,14 @@ Core gameplay features include tracking and displaying **user stats** (e.g., win
 - backend/ 
 - database/
 
+### 6. Walking Skeleton Plan
+
+The Walking Skeleton will prove end-to-end integration between the **frontend**, **backend**, and **database** using a minimal feature.
+
+1. The frontend will provide a way to **join as guest** (e.g., a “Play as Guest” button).
+2. When the user joins as guest, the frontend sends a request to the backend to **create a temporary guest session**.
+3. The backend creates the session, stores the guest session in the database, and returns a response confirming the session was created, including a **guest session ID**.
+4. The database must be able to **store the guest session ID** (at minimum) so the backend can retrieve it and prove persistence.
 
 
 
