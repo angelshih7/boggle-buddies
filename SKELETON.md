@@ -81,6 +81,26 @@ Core gameplay features include tracking and displaying **user stats** (e.g., win
 #### Source
 - **Dictionary database TBD**
 
+### 5. Repository Structure (Current Idea)
+- RESEARCH/
+    - Research Reports of each developer
+    - Troubleshooting Reports of each developer
+- ROLES.md
+- README.md
+- STYLE.md
+- docker/
+    - Dockerfile.backend
+    - Dockerfile.frontend
+    - Dockerfile.SQL
+    - docker-compose.yml
+- docs/
+    - API.md
+    - TESTING.md
+    - ARCHITECTURE.md
+- frontend/
+- backend/ 
+- database/
+
 
 
 
