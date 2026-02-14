@@ -1,5 +1,109 @@
-Here is where you will explain your plan for the Walking Skeleton.
+# Boggle Your Mind Project
 
-We will talk more about this in the future. In summary, the Walking Skeleton is a plan for setting up a minimal version of your tech stack. This is less than a MVP (minimum viable product) as this is not meant to be a product. It is to prove that you are able to integrate the three main components of your application: front end, back end, and database. 
+## Project name: Boggle your Mind
 
-To complete the Skeleton you must be able to interact with your front end, have that interaction be sent to your backend, have something be stored in your database, and return a result back to the front end. This feature does not have to be particularly powerful or meaningful, but you must prove that you can communicate between each component of your application.
+### 1. Overview
+Implement an application for the game **Boggle**. The application should include algorithms to (1) randomly shuffle the letter dice to generate a board and (2) check whether submitted words are valid.
+
+The application should support **real-time multiplayer** games with other users, as well as games where a user can compete against the **machine**. Users should be able to play as a **guest** or create an **account**.
+
+Core gameplay features include tracking and displaying **user stats** (e.g., wins/losses), showing each player’s **word list** at the end of the game, and **highlighting unique words**. Games should include a **timer**, and the application should allow **customizable game settings** and board options (within project scope).
+
+### 2. Scope
+
+#### 2.1 Must-have (MVP)
+- **Account registration** (authentication)
+- **Login** 
+- **Guest PLay**
+- **Real-time multiplayer** 
+- **Play vs Machine**
+- **Settings Customization**
+- **Stats display**
+- **Display words and highlight unique words**
+
+#### 2.2 Extra/Out of Scope
+- **Share custom boards**
+- **Machine difficulty setting** (applicable to board and machine)
+- **Ranking system**
+- **multi-alphabet**
+
+### 3. High-Level Requirements
+
+#### 3.1 Gameplay
+- Generate board with shuffling algorithm.
+- Add/Removing words
+- Word validation (Word should exist in dictionary)
+- Game Rule check algorithm
+    1.  Duplicate words not allowed
+    2.  No using the same letter twice
+    3.  Word length 3 or greater
+    4.  Words have to be diagonally or side by side to connect.
+- Scoring Screen
+    1.  Show each player's submitted words
+    2.  highlights **Unique** vs **Shared** entries
+    3.  display total score per player and winner/loser/ties
+
+#### 3.2 Multiplayer
+- Users can create/join game rooms
+- Real-time game state sync
+
+#### 3.3 Accounts + stats
+- Registered users can view stats
+- Guests can play without saving long-term stats
+
+### 4. Tech Stack
+
+#### Frontend
+- React/React Native
+
+#### Backend
+- Java
+- Spring Boot
+- REST API 
+- Real-time communication **TBD**
+
+#### Database
+- SQL
+- **Cloud base TBD**
+
+#### Tooling
+- Docker (development consistency)
+- Gitlab (Versioning)
+- Postman (API Testing)
+- JUNIT + Mockito (backend unit/integration tests)
+
+#### Source
+- **Dictionary database TBD**
+
+### 5. Repository Structure (Current Idea)
+- RESEARCH/
+    - Research Reports of each developer
+    - Troubleshooting Reports of each developer
+- ROLES.md
+- README.md
+- STYLE.md
+- docker/
+    - Dockerfile.backend
+    - Dockerfile.frontend
+    - Dockerfile.SQL
+    - docker-compose.yml
+- docs/
+    - API.md
+    - TESTING.md
+    - ARCHITECTURE.md
+- frontend/
+- backend/ 
+- database/
+
+### 6. Walking Skeleton Plan
+
+The Walking Skeleton will prove end-to-end integration between the **frontend**, **backend**, and **database** using a minimal feature.
+
+1. The frontend will provide a way to **join as guest** (e.g., a “Play as Guest” button).
+2. When the user joins as guest, the frontend sends a request to the backend to **create a temporary guest session**.
+3. The backend creates the session, stores the guest session in the database, and returns a response confirming the session was created, including a **guest session ID**.
+4. The database must be able to **store the guest session ID** (at minimum) so the backend can retrieve it and prove persistence.
+
+
+
+
