@@ -33,6 +33,32 @@ Core gameplay features include tracking and displaying **user stats** (e.g., win
 - **Ranking system**
 - **multi-alphabet**
 
+### 3. High-Level Requirements
+
+#### 3.1 Gameplay
+- Generate board with shuffling algorithm.
+- Add/Removing words
+- Word validation (Word should exist in dictionary)
+- Game Rule check algorithm
+    1.  Duplicate words not allowed
+    2.  No using the same letter twice
+    3.  Word length 3 or greater
+    4.  Words have to be diagonally or side by side to connect.
+- Scoring Screen
+    1.  Show each player's submitted words
+    2.  highlights **Unique** vs **Shared** entries
+    3.  display total score per player and winner/loser/ties
+
+#### 3.2 Multiplayer
+- Users can create/join game rooms
+- Real-time game state sync
+
+#### 3.3 Accounts + stats
+- Registered users can view stats
+- Guests can play without saving long-term stats
+
+### 4. Tech Stack
+
 
 
 
