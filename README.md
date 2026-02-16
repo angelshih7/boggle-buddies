@@ -8,7 +8,7 @@
 
 ### Customer
 
-The general customer for **Boggle Buddies** includes casual word game players, students, and competitive players who enjoy fast paced vocab challenges, specifically those interested in a real time multiplayer setting. The system is designed for users who value social gameplay, competitive scoring, and customizable setting in an accessible web environment.
+The general customer for **Boggle Buddies** includes casual word game players, students, and competitive players who enjoy fast paced vocab challenges, specifically those interested in a real time multiplayer setting. The system is designed for users who value social gameplay, competitive scoring, and a customizable setting in an accessible web environment.
 
 ### Specification
 
