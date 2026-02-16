@@ -4,17 +4,11 @@ Please fill out this document to reflect your team's project. This is a living d
 
 Also, be sure to check out the Wiki for information on how to maintain your team's requirements.
 
-## TeamName
-
-<!--The name of your team.-->
+## Boggle Buddies
 
 ### Project Abstract
 
-<!--A one paragraph summary of what the software will do.-->
-
-This is an example paragraph written in markdown. You can use *italics*, **bold**, and other formatting options. You can also <u>use inline html</u> to format your text. The example sections included in this document are not necessarily all the sections you will want, and it is possible that you won't use all the one's provided. It is your responsibility to create a document that adequately conveys all the information about your project specifications and requirements.
-
-Please view this file's source to see `<!--comments-->` with guidance on how you might use the different sections of this document. 
+**Boggle Buddies** is a real time multiplayer word game insired by the classic game **Boggle**, where players compete to find as many valid words as possible from a randomly generated letter board within a time limit. The application features both <u>live multiplayer matches</u> and a <u>player vs computer mode</u>. Users are able to play as a *guest* or *create an account* to track long term stats like wins and losses. The system includes *board shuffling algorithms*, *dictionary based words*, *rule enforcement* like no duplicate words, and a *dynamic scoring screen* that highlights unique vs shared words. This is built with a **React** frontend and a **Java Spring Boot** backend that allows *settings customization*, *real time game sync*, and *persistent data storage* using a **SQL** database and is containerized using **Docker** for consistency. 
 
 ### Customer
 
