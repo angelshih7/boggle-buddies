@@ -1,9 +1,5 @@
 # Specification Document
 
-Please fill out this document to reflect your team's project. This is a living document and will need to be updated regularly. You may also remove any section to its own document (e.g. a separate standards and conventions document), however you must keep the header and provide a link to that other document under the header.
-
-Also, be sure to check out the Wiki for information on how to maintain your team's requirements.
-
 ## Boggle Buddies
 
 ### Project Abstract
@@ -16,212 +12,110 @@ The general customer for **Boggle Buddies** includes casual word game players, s
 
 ### Specification
 
-<!--A detailed specification of the system. UML, or other diagrams, such as finite automata, or other appropriate specification formalisms, are encouraged over natural language.-->
-
-<!--Include sections, for example, illustrating the database architecture (with, for example, an ERD).-->
-
-<!--Included below are some sample diagrams, including some example tech stack diagrams.-->
-
 #### Technology Stack
-
-Here are some sample technology stacks that you can use for inspiration:
 
 ```mermaid
 flowchart RL
-subgraph Front End
+subgraph Frontend
 	A(Javascript: React)
 end
 	
-subgraph Back End
-	B(Python: Django with \nDjango Rest Framework)
+subgraph Backend
+	B(Java: Spring Boot REST API)
+    R(Real-Time Layer: WebSocket / TBD)
 end
 	
 subgraph Database
-	C[(MySQL)]
+	C[(SQL Database)]
 end
 
-A <-->|"REST API"| B
-B <-->|Django ORM| C
-```
-
-```mermaid
-flowchart RL
-subgraph Front End
-	A(Javascript: Vue)
-end
-	
-subgraph Back End
-	B(Python: Flask)
-end
-	
-subgraph Database
-	C[(MySQL)]
-end
-
-A <-->|"REST API"| B
-B <-->|SQLAlchemy| C
-```
-
-```mermaid
-flowchart RL
-subgraph Front End
-	A(Javascript: Vue)
-end
-	
-subgraph Back End
-	B(Javascript: Express)
-end
-	
-subgraph Database
-	C[(MySQL)]
-end
-
-A <-->|"REST API"| B
+A <-->|"REST API (HTTP)"| B
+B <-->|WebSocket| C
 B <--> C
+R <--> B
 ```
-
-```mermaid
-flowchart RL
-subgraph Front End
-	A(Static JS, CSS, HTML)
-end
-	
-subgraph Back End
-	B(Java: SpringBoot)
-end
-	
-subgraph Database
-	C[(MySQL)]
-end
-
-A <-->|HTTP| B
-B <--> C
-```
-
-```mermaid
-flowchart RL
-subgraph Front End
-	A(Mobile App)
-end
-	
-subgraph Back End
-	B(Python: Django)
-end
-	
-subgraph Database
-	C[(MySQL)]
-end
-
-A <-->|REST API| B
-B <-->|Django ORM| C
-```
-
-
 
 #### Database
 
 ```mermaid
----
-title: Sample Database ERD for an Order System
----
 erDiagram
-    Customer ||--o{ Order : "placed by"
-    Order ||--o{ OrderItem : "contains"
-    Product ||--o{ OrderItem : "included in"
+    User ||--o{ Game : participates_in
+    Game ||--o{ WordEntry : contains
+    User ||--o{ WordEntry : submits
+    Game ||--o{ Board : uses
 
-    Customer {
-        int customer_id PK
-        string name
-        string email
-        string phone
+    User {
+        int user_id PK
+        string username
+        string password
+        int wins
+        int losses
+        boolean is_guest
     }
 
-    Order {
-        int order_id PK
-        int customer_id FK
-        string order_date
+    Game {
+        int game_id PK
         string status
+        string start_time
+        string end_time
+        int duration_seconds
     }
 
-    Product {
-        int product_id PK
-        string name
-        string description
-        decimal price
+    Board {
+        int board_id PK
+        string grid
+        string seed
     }
 
-    OrderItem {
-        int order_item_id PK
-        int order_id FK
-        int product_id FK
-        int quantity
+    WordEntry {
+        int word_id PK
+        int user_id FK
+        int game_id FK
+        string word
+        int score
+        boolean is_unique
     }
 ```
 
 #### Class Diagram
 
 ```mermaid
----
-title: Sample Class Diagram for Animal Program
----
 classDiagram
-    class Animal {
-        - String name
-        + Animal(String name)
-        + void setName(String name)
-        + String getName()
-        + void makeSound()
+    class User {
+        +int userId
+        +String username
+        +boolean isGuest
+        +int wins
+        +int losses
     }
-    class Dog {
-        + Dog(String name)
-        + void makeSound()
+    class Game {
+        +int gameId
+        +Board board
+        +List players
+        +GameStatus status
+        +void startGame()
+        +void endGame()
+        +void calculateScores()
     }
-    class Cat {
-        + Cat(String name)
-        + void makeSound()
+    class Board {
+        +char[][] grid
+        +void shuffleDice()
+        +boolean isValidPath(String word)
     }
-    class Bird {
-        + Bird(String name)
-        + void makeSound()
+    class WordValidator {
+        +boolean existsInDictionary(String word)
+        +boolean followsRules(String word, Board board)
     }
-    Animal <|-- Dog
-    Animal <|-- Cat
-    Animal <|-- Bird
-```
-
-#### Flowchart
-
-```mermaid
----
-title: Sample Program Flowchart
----
-graph TD;
-    Start([Start]) --> Input_Data[/Input Data/];
-    Input_Data --> Process_Data[Process Data];
-    Process_Data --> Validate_Data{Validate Data};
-    Validate_Data -->|Valid| Process_Valid_Data[Process Valid Data];
-    Validate_Data -->|Invalid| Error_Message[/Error Message/];
-    Process_Valid_Data --> Analyze_Data[Analyze Data];
-    Analyze_Data --> Generate_Output[Generate Output];
-    Generate_Output --> Display_Output[/Display Output/];
-    Display_Output --> End([End]);
-    Error_Message --> End;
-```
-
-#### Behavior
-
-```mermaid
----
-title: Sample State Diagram For Coffee Application
----
-stateDiagram
-    [*] --> Ready
-    Ready --> Brewing : Start Brewing
-    Brewing --> Ready : Brew Complete
-    Brewing --> WaterLowError : Water Low
-    WaterLowError --> Ready : Refill Water
-    Brewing --> BeansLowError : Beans Low
-    BeansLowError --> Ready : Refill Beans
+    class WordEntry {
+        +String word
+        +int score
+        +boolean isUnique
+    }
+    User --> WordEntry
+    Game --> WordEntry
+    Game --> Board
+    Game --> User
+    Game --> WordValidator
 ```
 
 #### Sequence Diagram
@@ -229,21 +123,25 @@ stateDiagram
 ```mermaid
 sequenceDiagram
 
-participant ReactFrontend
-participant DjangoBackend
-participant MySQLDatabase
+participant Player1
+participant Player2
+participant Frontend
+participant Backend
+participant Database
 
-ReactFrontend ->> DjangoBackend: HTTP Request (e.g., GET /api/data)
-activate DjangoBackend
+Player1 ->> Frontend: Join Room
+Frontend ->> Backend: Create/Join Game
+Backend ->> Database: Create/Join Game in DB
+Backend ->> Frontend: Game Created
 
-DjangoBackend ->> MySQLDatabase: Query (e.g., SELECT * FROM data_table)
-activate MySQLDatabase
+Player2 ->> Frontend: Join Room
+Frontend ->> Backend: Join Game
+Backend ->>Frontend: Game State Sync
 
-MySQLDatabase -->> DjangoBackend: Result Set
-deactivate MySQLDatabase
-
-DjangoBackend -->> ReactFrontend: JSON Response
-deactivate DjangoBackend
+Frontend ->> Backend: Submit Word
+Backend ->>Backend: Validate Word
+Backend ->> Database: Store WordEntry
+Backend ->> Frontend: Real time Update
 ```
 
 ### Standards & Conventions
