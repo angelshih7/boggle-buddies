@@ -12,7 +12,7 @@ Also, be sure to check out the Wiki for information on how to maintain your team
 
 ### Customer
 
-<!--A brief description of the customer for this software, both in general (the population who might eventually use such a system) and specifically for this document (the customer(s) who informed this document). Every project will have a customer from the CS506 instructional staff. Requirements should not be derived simply from discussion among team members. Ideally your customer should not only talk to you about requirements but also be excited later in the semester to use the system.-->
+The general customer for **Boggle Buddies** includes casual word game players, students, and competitive players who enjoy fast paced vocab challenges, specifically those interested in a real time multiplayer setting. The system is designed for users who value social gameplay, competitive scoring, and customizable setting in an accessible web environment.
 
 ### Specification
 
