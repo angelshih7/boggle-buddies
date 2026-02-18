@@ -7,7 +7,7 @@ I also need to understand what exactly a walking skeleton needed what components
 Furthermore, I research the structure that is recommended for these.
 
 ### Motivation
-Trying to understand and develop the needed walking skeleton for sp$
+Trying to understand and develop the needed walking skeleton for sprint.
 
 ### Time Spent
 1 Hour
