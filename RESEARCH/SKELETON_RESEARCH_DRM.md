@@ -1,5 +1,5 @@
 # Research Report
-## <TOPIC_HERE>
+## Walking Skeleton
 ### Summary of Work
 I Researched the a minimal viable product would entail for this spr$
 Furthermore, I researched what components I would need to make the $
