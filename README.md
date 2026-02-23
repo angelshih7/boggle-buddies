@@ -39,41 +39,52 @@ R <--> B
 
 ```mermaid
 erDiagram
-    User ||--o{ Game : participates_in
-    Game ||--o{ WordEntry : contains
-    User ||--o{ WordEntry : submits
-    Game ||--o{ Board : uses
+    users ||--o{ games : "player1 / player2"
+    users ||--o{ found_words : submits
+    games ||--o{ found_words : contains
+    games ||--|| boards : uses
+    found_words }o--|| dictionary : references
+    games }o--|| users : winner
 
-    User {
-        int user_id PK
+    users {
+        int id PK
         string username
-        string password
-        int wins
-        int losses
-        boolean is_guest
+        string email
+        string password_hash
+        datetime created_at
     }
 
-    Game {
-        int game_id PK
-        string status
-        string start_time
-        string end_time
-        int duration_seconds
+    games {
+        int id PK
+        int player1_id FK
+        int player2_id FK
+        varchar board_id FK
+        int winner_player_id FK
+        enum status
+        datetime created_at
+        datetime started_at
+        datetime finished_at
     }
 
-    Board {
-        int board_id PK
-        string grid
-        string seed
+    boards {
+        varchar board_id PK
+        text board_string
+        datetime created_at
     }
 
-    WordEntry {
-        int word_id PK
-        int user_id FK
-        int game_id FK
+    dictionary {
+        int id PK
         string word
-        int score
-        boolean is_unique
+        int point_value
+        datetime created_at
+    }
+
+    found_words {
+        int id PK
+        int player_id FK
+        int game_id FK
+        int dictionary_word_id FK
+        datetime found_at
     }
 ```
 
