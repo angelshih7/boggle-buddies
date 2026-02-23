@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: ../BoggleSpringBoot
+      dockerfile: ../Docker/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+    # DB-ready placeholders (safe to leave commented until you add MySQL driver/JPA)
+    # environment:
+    #   SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/boggle?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    #   SPRING_DATASOURCE_USERNAME: boggle
+    #   SPRING_DATASOURCE_PASSWORD: boggle
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: boggle
+      MYSQL_USER: boggle
+      MYSQL_PASSWORD: boggle
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
