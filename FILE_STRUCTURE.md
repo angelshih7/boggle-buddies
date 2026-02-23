@@ -7,102 +7,133 @@ This structure keeps your existing feature folders (`buggle_board/`, `buggle_rul
 ## Folder Tree
 
 ```text
-project_14/
-├─ src/
-│  └─ main/
-│     └─ java/
-│        └─ com/
-│           ├─ frontend/
-│           └─ backend/
-│              ├─ config/
-│              │  
-│              ├─ common/
-│              │  
-│              ├─ session/
-│              │
-│              ├─ buggle_board/
-│              │
-│              ├─ buggle_rules/
-│              │
-│              ├─ buggle_scores/
-│              │
-│              └─ game/
-│
-└─ db/
+boggle-app/
+├── Docker/
+│   ├── docker-compose.yml
+│   └── Dockerfile
+├── README.md
+├── frontend/                          # React app
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   │   ├── HomePage.jsx
+│   │   │   ├── GamePage.jsx
+│   │   │   └── LeaderboardPage.jsx
+│   │   ├── services/                  # API call functions
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── Dockerfile
+│   └── package.json
+├── backend/                           # Spring Boot app
+│   └── src/
+│       ├── main/
+│       │   ├── java/
+│       │   │   └── com/
+│       │   │       └── boggle/
+│       │   │           ├── controller/
+│       │   │           ├── service/
+│       │   │           ├── model/            # Game, Board, Player Word
+│       │   │           ├── repository/
+│       │   │           └── BoggleApplication.java
+│       │   └── resources/
+│       │       ├── application.properties
+│       │       └── schema.sql
+│       └── test/
+│           └── java/                         # JUnit/Mockito tests
+└── database/
+    └── init.sql
 
 ```
-## Config Folder
-Will store configuration of websocket as well as connect frontend with backend by communicating global signals. It defines the “global wiring” for how clients connect and how messages move through the system. This keeps real-time and cross-cutting setup in one place.
 
-### potential files
-1. WebSocket configuration
-2. Backend setup for frontend communication
+## Backend folders
+## controller/
+**Summary of Folder:** Contains REST endpoints that receive HTTP/WebSocket requests from the frontend and return responses. It should handle request/response mapping, input validation at the boundary, and delegate all business logic to the service layer. Controllers should remain thin to keep logic testable and maintainable.  
+**Potential Files:**  
+- `GameController.java`  
+- `LobbyController.java`  
+- `ScoreController.java`  
 
----
+## service/
+**Summary of Folder:** Implements the application’s business logic and orchestration for gameplay, scoring, and session flow. It coordinates between controllers, repositories, and any external integrations while enforcing game rules. Services should be reusable and independent of transport details like HTTP.  
+**Potential Files:**  
+- `GameService.java`  
+- `BoardService.java`  
+- `ScoringService.java`  
+- `SessionService.java`  
 
-## Common Folder  
-Will store shared backend conventions used across every feature folder. It standardizes how responses, errors, and naming are done so modules stay consistent. This prevents each folder from inventing its own formats.
+## model/
+**Summary of Folder:** Defines the core domain objects and data structures used throughout the application (e.g., Game, Board, Player, Word). It should contain entities, DTOs, and value objects that represent game state and requests/responses. Models should be kept consistent and predictable to prevent rule duplication across layers.  
+**Potential Files:**  
+- `Game.java`  
+- `Board.java`  
+- `Player.java`  
+- `Word.java`  
+- `GameStateDto.java`  
 
-### potential files  
-1. Standard success/error response format (JSON shape examples)  
-2. Status code guidelines (when to use 400 vs 404 vs 500)  
-3. Shared definitions/terms (game, session, player, round)  
-4. Shared validation norms (lowercase, trim, max word length, etc.)  
+## repository/
+**Summary of Folder:** Provides the data access layer for reading and writing persistent data (e.g., user stats, saved games, leaderboards). It should encapsulate database queries so services do not depend on SQL or storage details directly. Repositories commonly use Spring Data interfaces and query methods for clarity and consistency.  
+**Potential Files:**  
+- `PlayerRepository.java`  
+- `GameRepository.java`  
+- `LeaderboardRepository.java`   
 
----
+## resources/
+**Summary of Folder:** Stores runtime configuration and application resources that are packaged with the backend. It typically includes environment-specific settings, database initialization scripts, and configuration for Spring Boot. Resources should be treated as deployable assets and kept consistent across environments.  
+**Potential Files:**  
+- `application.properties`  
+- `application-dev.properties`  
+- `application-test.properties`  
+- `schema.sql`  
+- `data.sql`  
 
-## Session Folder  
-Will store session behavior for guests and (later) registered users. It supports the Walking Skeleton by proving persistence through creating and retrieving a session. This also defines what a session is allowed to do in the system.
+## test/
+**Summary of Folder:** Contains automated tests that verify correctness of controllers, services, and repositories using JUnit and Mockito. It should include unit tests for business logic and integration tests for Spring context and persistence boundaries. Tests should be organized to mirror the main package structure for quick navigation.  
+**Potential Files:**  
+- `GameServiceTest.java`  
+- `BoardServiceTest.java`  
+- `GameControllerTest.java`  
+- `RepositoryIntegrationTest.java`  
+- `BoggleApplicationTests.java`  
 
-### potential files  
-1. Guest session create + fetch flow (Walking Skeleton steps)  
-2. Session data model (fields like id, type, createdAt, expiresAt)  
-3. Guest vs user rules (what persists, what resets, limitations)  
-4. Session lifecycle (expiration, cleanup, reconnect behavior)  
+### AI Statement
+#### AI was used in collaboration to write file.
+Prompt Used:
+I need to make and File_structure.md summarizing some points.
+"""
+Context Debatable repo structure
 
----
+├── backend/                           # Spring Boot app
+│   └── src/
+│       ├── main/
+│       │   ├── java/
+│       │   │   └── com/
+│       │   │       └── boggle/
+│       │   │           ├── controller/
+│       │   │           ├── service/
+│       │   │           ├── model/            # Game, Board, Player Word
+│       │   │           ├── repository/
+│       │   │           └── BoggleApplication.java
+│       │   └── resources/
+│       │       ├── application.properties
+│       │       └── schema.sql
+│       └── test/
+│           └── java/                         # JUnit/Mockito tests
 
-## Game Folder  
-Will store the multiplayer game lifecycle and server-side game state rules. It explains how rooms are created, joined, started, timed, and ended. This becomes the “source of truth” documentation for syncing state.
+Instructions:
+- Explain Controller, Service, Model, repository, BoggleApplication.java
+- Explain resources 
+- Explain Test
 
-### potential files  
-1. Room lifecycle (create/join/leave/start/end)  
-2. Game state schema (players, board, submissions, phase, timer)  
-3. Real-time event list + payloads (state updates broadcast to clients)  
-4. Edge cases (disconnect/rejoin, late join rules, tie handling)  
+constraints:
+1. Must use Mark Down
+2. No Emojis
+3. summary must be at most 3 sentences long
 
----
+Structure of Explanation:
 
-## Buggle_Board Folder  
-Will store board generation behavior and the board format returned to clients. It documents how randomness is handled and what options exist for board size/settings. This keeps board creation independent from word validation.
+Summary of Folder: 3 sentence at most about what folder should hold.
+Potential Files: at least 2 potential files (stop if 6 potential files)
 
-### potential files  
-1. Board generation method (dice shuffle vs random letters)  
-2. Board options (size, seed/replay support, special tiles like “Qu”)  
-3. Board response format (2D grid structure + metadata)  
-4. Constraints (letter distribution, reproducibility rules)  
-
----
-
-## Buggle_Rules Folder  
-Will store word validation and rule checking documentation. It defines exactly what makes a word valid and what checks happen in what order. This is the main reference for gameplay correctness.
-
-### potential files  
-1. Dictionary strategy (file-based or DB-based lookup)  
-2. Rule checks (length ≥ 3, adjacency, no reuse of same cell)  
-3. Duplicate submission rules (per player, per round)  
-4. Validation response format (valid/invalid + reason codes)  
-
----
-
-## Buggle_Scores Folder  
-Will store scoring rules and how end-of-game results are calculated. It documents how total scores are computed and how unique vs shared words are highlighted. This drives the final scoreboard screen.
-
-### potential files  
-1. Scoring rules (word length → points table)  
-2. Unique vs shared word logic (compare lists across players)  
-3. Scoreboard output format (totals, word lists, winner/tie)  
-4. End-game summary rules (ties, empty submissions, penalties if any)  
-
-
-
+Writing Style: Formal yet intuitive no overly complex language
+"""
