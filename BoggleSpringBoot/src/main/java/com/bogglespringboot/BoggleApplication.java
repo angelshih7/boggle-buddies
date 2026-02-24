@@ -3,7 +3,11 @@ package com.bogglespringboot;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+
+@SpringBootApplication(scanBasePackages = {
+        "com.bogglespringboot",
+        "com.example.Boggle"
+})
 public class BoggleApplication {
 
     public static void main(String[] args) {
