@@ -1,4 +1,4 @@
-package com.example.Boggle;
+package com.bogglespringboot;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
