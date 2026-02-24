@@ -1,6 +1,6 @@
-package com.Backend.game_functions;
+package com.bogglespringboot.util;
 
-public class points{
+public class PointCalculator{
 
     private static int score = 0;
     public static void  calculate_word_score(String wordOfBoggle){
