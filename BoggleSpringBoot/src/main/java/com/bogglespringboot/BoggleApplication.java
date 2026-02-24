@@ -1,4 +1,4 @@
-package com.example.Boggle;
+package com.bogglespringboot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -6,9 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class BoggleApplication {
 
-	public static void main(String[] args) {
-
-		SpringApplication.run(BoggleApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(BoggleApplication.class, args);
+    }
 }
