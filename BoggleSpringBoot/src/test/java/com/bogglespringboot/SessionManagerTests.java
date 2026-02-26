@@ -1,7 +1,7 @@
 package com.bogglespringboot;
 
-import com.example.Boggle.sessions.Session;
-import com.example.Boggle.sessions.SessionManager;
+import com.bogglespringboot.Session.Session;
+import com.bogglespringboot.Session.SessionManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
