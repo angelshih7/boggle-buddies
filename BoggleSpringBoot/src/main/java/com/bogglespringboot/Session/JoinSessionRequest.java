@@ -1,4 +1,4 @@
-package com.example.Boggle.sessions;
+package com.bogglespringboot.Session;
 
 public class JoinSessionRequest {
 

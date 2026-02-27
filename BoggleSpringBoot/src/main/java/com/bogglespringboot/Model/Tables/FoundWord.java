@@ -2,7 +2,6 @@ package com.bogglespringboot.Model.Tables;
 
 
 import jakarta.persistence.*;
-import org.springframework.context.annotation.Primary;
 
 import java.time.LocalDateTime;
 
@@ -27,11 +26,11 @@ public class FoundWord {
 
     @ManyToOne(optional = false)
     @JoinColumn(name="player_id", foreignKey = @ForeignKey(name = "fk_found_player"))
-    private Users player;
+    private User player;
 
     @ManyToOne(optional = false)
     @JoinColumn(name="game_id", foreignKey = @ForeignKey(name="fk_found_game"))
-    private Games game;
+    private Game game;
 
     @ManyToOne(optional = false)
     @JoinColumn(name="dictionary_word_id", foreignKey=@ForeignKey(name="fk_found_dictionary"))
