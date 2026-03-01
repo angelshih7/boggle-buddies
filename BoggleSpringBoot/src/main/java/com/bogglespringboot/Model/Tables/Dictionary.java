@@ -3,7 +3,10 @@ package com.bogglespringboot.Model.Tables;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-
+/*
+Represents a persisted Boggle dictionary row in the dictionary table, including dictionary layout and creation time.
+Every word has an id and a point value.
+ */
 @Entity
 @Table(name="dictionary")
 public class Dictionary {

@@ -5,6 +5,10 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
+/*
+Represents a persisted Boggle found word row in the found_word table, including found_word layout and creation time.
+found_word table stores the game session words found during the boggle game.
+ */
 @Entity
 @Table(name="found_words",
         indexes = {@Index(name = "fk_found_game", columnList = "game_id"),
@@ -39,5 +43,33 @@ public class FoundWord {
     @Column(name="found_at",nullable = false,insertable = false,updatable = false)
     private LocalDateTime foundAt;
 
+    public void getPlayer(){
+        return player;
+    }
+    public void getId(){
+        return id;
+    }
+    public void getGame(){
+        return game;
+    }
+
+    public Dictionary getDictionaryWord() {
+        return dictionaryWord;
+    }
+    public getFoundAt(){
+        return foundAt;
+    }
+
+    public void setPlayer(User player) {
+        this.player = player;
+    }
+
+    public void setDictionaryWord(Dictionary dictionaryWord) {
+        this.dictionaryWord = dictionaryWord;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
 
 }
