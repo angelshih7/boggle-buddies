@@ -18,13 +18,37 @@ public class SessionManager {
         try {
             // Try to find existing session with given code
             joinSession = findSession(request.getSessionCode());
-            joinSession.users.add(request.getUsername());
+            joinSession.addUser(request.getUsername());
         } catch (NoSuchElementException e) {
             // If no existing session with given code exists, create new
             joinSession = new Session(request.getSessionCode(), request.getUsername());
             activeSessions.add(joinSession);
         }
         return joinSession;
+    }
+
+    // New endpoint: submit a word, reject duplicates per (sessionCode, username)
+    @PostMapping("/api/submitWord")
+    public SubmitWordResponse submitWord(@RequestBody SubmitWordRequest request) {
+        if (request.getSessionCode() == null || request.getUsername() == null || request.getWord() == null) {
+            return new SubmitWordResponse(false, "INVALID");
+        }
+
+        try {
+            Session session = findSession(request.getSessionCode());
+
+            // Optional: auto-add user if they somehow submit before joining
+            session.addUser(request.getUsername());
+
+            boolean accepted = session.recordWord(request.getUsername(), request.getWord());
+            if (!accepted) {
+                return new SubmitWordResponse(false, "DUPLICATE");
+            }
+            return new SubmitWordResponse(true, "OK");
+
+        } catch (NoSuchElementException e) {
+            return new SubmitWordResponse(false, "INVALID");
+        }
     }
 
     // Look for active sessions by code, throw NoSuchElementException if none found
