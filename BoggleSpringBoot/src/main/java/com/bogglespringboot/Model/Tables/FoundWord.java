@@ -43,13 +43,13 @@ public class FoundWord {
     @Column(name="found_at",nullable = false,insertable = false,updatable = false)
     private LocalDateTime foundAt;
 
-    public void getPlayer(){
+    public User getPlayer(){
         return player;
     }
-    public void getId(){
+    public Integer getId(){
         return id;
     }
-    public void getGame(){
+    public Game getGame(){
         return game;
     }
 
