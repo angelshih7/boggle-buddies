@@ -1,0 +1,123 @@
+/* Page layout, fixed to fill viewport and escape App.css root constraints */
+.game-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  text-align: left;
+}
+
+/* Sidebar */
+.game-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #303E77 0%, #1f2f63 100%);
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px;
+  gap: 8px;
+}
+
+/* Player avatar circle */
+.player-avatar {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: 3px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  margin-bottom: 4px;
+}
+
+/* Player name */
+.player-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  margin: 0 0 20px;
+  text-align: center;
+  word-break: break-word;
+}
+
+/* Score card */
+.score-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 16px 28px;
+  gap: 4px;
+}
+
+.score-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  opacity: 0.7;
+}
+
+.score-value {
+  font-size: 3rem;
+  font-weight: 800;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  line-height: 1;
+}
+
+/* Main content area */
+.game-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* Boggle grid, always square */
+.boggle-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 12px;
+  width: min(52vh, 440px);
+  aspect-ratio: 1 / 1;
+}
+
+/* Individual tile */
+.tile {
+  background: #ffffff;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.1),
+              0 1px 3px rgba(16, 24, 40, 0.06);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(48, 62, 119, 0.2);
+}
+
+/* Tile letter */
+.tile-letter {
+  font-size: clamp(1.4rem, 3.5vw, 2.2rem);
+  font-weight: 800;
+  color: #303E77;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+}
+
+/* Qu is two characters, shrink slightly so it fits the tile */
+.tile-letter--qu {
+  font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+}
