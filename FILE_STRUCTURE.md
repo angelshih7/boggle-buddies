@@ -30,15 +30,18 @@ boggle-app/
 │       ├── main/
 │       │   ├── java/
 │       │   │   └── com/
-│       │   │       └── boggle/
-│       │   │           ├── controller/
-│       │   │           ├── service/
-│       │   │           ├── model/            # Game, Board, Player Word
+│       │   │       └── bogglespringboot/
+│       │   │           ├── model/
+│       │   │           │      └──tables/ 
+│       │   │           ├── session/
+│       │   │           ├── util/
 │       │   │           ├── repository/
-│       │   │           └── BoggleApplication.java
+│       │   │           ├── controller/
+│       │   │           └── example/
+│       │   │                 └── boggle/  
 │       │   └── resources/
+│       │       │    └── BoggleDB.sql
 │       │       ├── application.properties
-│       │       └── schema.sql
 │       └── test/
 │           └── java/                         # JUnit/Mockito tests
 └── database/
@@ -54,7 +57,7 @@ boggle-app/
 - `LobbyController.java`  
 - `ScoreController.java`  
 
-## service/
+## util/
 **Summary of Folder:** Implements the application’s business logic and orchestration for gameplay, scoring, and session flow. It coordinates between controllers, repositories, and any external integrations while enforcing game rules. Services should be reusable and independent of transport details like HTTP.  
 **Potential Files:**  
 - `GameService.java`  
