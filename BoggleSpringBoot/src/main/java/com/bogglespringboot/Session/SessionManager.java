@@ -1,15 +1,27 @@
 package com.bogglespringboot.Session;
 
-import java.util.ArrayList;
-
+import com.bogglespringboot.Model.Tables.User;
+import com.bogglespringboot.repository.SessionRepository;
+import com.bogglespringboot.repository.UserRepository;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
+import java.util.UUID;
+
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @RestController
 public class SessionManager {
-    // Might be temporary if we start a session database
-    ArrayList<Session> activeSessions = new ArrayList<>();
+    private final SessionRepository sessionRepository;
+    private final UserRepository userRepository;
+
+    public SessionManager(SessionRepository sessionRepository, UserRepository userRepository) {
+        this.sessionRepository = sessionRepository;
+        this.userRepository = userRepository;
+    }
 
     // Respond to post requests to join a session with username and a session code
     @PostMapping("/api/join")
@@ -24,7 +36,19 @@ public class SessionManager {
             joinSession = new Session(request.getSessionCode(), request.getUsername());
             activeSessions.add(joinSession);
         }
-        return joinSession;
+
+        Session session = sessionRepository.findBySessionCode(sessionCode)
+                .orElseGet(() -> new Session(sessionCode, user.getUsername()));
+        session.addUser(user.getUsername());
+        Session savedSession = sessionRepository.save(session);
+
+        return new SessionResponse(
+                savedSession.getId(),
+                savedSession.getSessionCode(),
+                savedSession.getUsers(),
+                user.getId(),
+                false
+        );
     }
 
     // New endpoint: submit a word, reject duplicates per (sessionCode, username)
@@ -53,19 +77,32 @@ public class SessionManager {
 
     // Look for active sessions by code, throw NoSuchElementException if none found
     Session findSession(String sessionCode) throws NoSuchElementException {
-        // Search for session code in active sessions
-        for (Session activeSession : activeSessions) {
-            if (activeSession.sessionCode.equals(sessionCode)) {
-                // Return session if found
-                return activeSession;
-            }
-        }
-        // Session code not found in active sessions
-        throw new NoSuchElementException();
+        return sessionRepository.findBySessionCode(sessionCode).orElseThrow(NoSuchElementException::new);
     }
 
     // Getter to access active sessions for testing purposes
     public ArrayList<Session> getActiveSessions() {
-        return activeSessions;
+        return new ArrayList<>(sessionRepository.findAll());
+    }
+
+    private String requireValue(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, fieldName + " is required");
+        }
+        return value.trim();
+    }
+
+    private String uniqueGuestUsername(String baseUsername) {
+        if (!userRepository.existsByUsername(baseUsername)) {
+            return baseUsername;
+        }
+
+        int suffix = 1;
+        String candidate = baseUsername + suffix;
+        while (userRepository.existsByUsername(candidate)) {
+            suffix++;
+            candidate = baseUsername + suffix;
+        }
+        return candidate;
     }
 }
