@@ -59,6 +59,10 @@ public class Game {
         this.createdAt = LocalDateTime.now();
     }
 
+    public Game() {
+
+    }
+
     //Getters
 
     public Integer getId() {

@@ -1,11 +1,7 @@
-package com.bogglespringboot.Game;
-
+package com.bogglespringboot.Model.Tables;
 import com.bogglespringboot.Model.Tables.*;
 import com.bogglespringboot.Session.Session;
-import com.bogglespringboot.repository.BoardRepository;
-import com.bogglespringboot.repository.GameRepository;
-import com.bogglespringboot.repository.SessionRepository;
-import com.bogglespringboot.repository.UserRepository;
+import com.bogglespringboot.repository.*;
 import com.bogglespringboot.util.ShuffleUtil;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -31,17 +27,19 @@ public class GameController{
     private final BoardRepository boardRepository;
     private final FoundWordRepository foundWordRepository;
     private final SessionRepository sessionRepository;
+    private final UserRepository userRepository;
 
 
-//initialize repositories
+    //initialize repositories
     public GameController(GameRepository gameRepository,
-                       BoardRepository boardRepository,
-                       FoundWordRepository foundWordRepository,
-                       SesssionRepository sesssionRepository){
+                          BoardRepository boardRepository,
+                          FoundWordRepository foundWordRepository,
+                          SessionRepository sessionRepository, UserRepository userRepository){
         this.gameRepository = gameRepository;
         this.boardRepository = boardRepository;
         this.foundWordRepository = foundWordRepository;
         this.sessionRepository = sessionRepository;
+        this.userRepository = userRepository;
     }
 
     public enum GameMode {SOLO, BOT, MULTIPLAYER}
@@ -64,10 +62,10 @@ public class GameController{
         public static GameResponse GameSummaryDTO(Game currentGame){
             GameResponse gameSummary = new GameResponse();
             gameSummary.gameId = currentGame.getId();
-            gameSummary.player1Id = currentGame
+            gameSummary.player1Id = currentGame.getPlayer2().getId();
             gameSummary.player2Id = currentGame.getPlayer2().getId();
             gameSummary.boardId = currentGame.getBoard().getBoardId();
-            gameSummary.status = currentGame.getStatus.name();
+            gameSummary.status = currentGame.getStatus().name();
             return gameSummary;
         }
     }
@@ -75,12 +73,12 @@ public class GameController{
     public static class BoardResponse{
         public String boardId;
         public String boardString;
-        public BoardResponse BoardGetInstance (String boardId, String boardString ){
+        public BoardResponse(String boardId, String boardString ){
             this.boardId = boardId;
-            this.boardString = boardString
+            this.boardString = boardString;
         }
         public static BoardResponse BoadDTO(Board currentBoard){
-            return new BoardResponse(currentBoard.getBoardId(),currentBoard.getBoardString);
+            return new BoardResponse(currentBoard.getBoardId(), currentBoard.getBoardString());
         }
     }
 
@@ -91,30 +89,83 @@ public class GameController{
             throw new ResponseStatusException(BAD_REQUEST,"Body is required");
         }
 
-        User
+        User p1;
+        User p2;
 
-        switch (GameMode):
-            case SOLO:
+        switch (request.mode) {
+            case SOLO ->{
+                p1 = requireUser(request.playerId,"player1Id");
+                p2 = p1;
+            }
+            case BOT -> {
+                p1 = requireUser(request.playerId,"Player1Id");
+                p2 = getOrCreateBot();
+            }
+            case MULTIPLAYER ->{
+                String code = require(request.sessionCode,"sessionCode");
+                Session session = sessionRepository.findBySessionCode(code)
+                        .orElseThrow(()->new ResponseStatusException(NOT_FOUND,"session not found"));
 
-            case BOT:
-            case Multiplayer:
+                List<String> users = session.getUsers();
+                if(users.size() < 2) throw new ResponseStatusException(CONFLICT,"Need 2 Players in session");
+                if(users.size() > 2) throw  new ResponseStatusException(CONFLICT,"More than 2 Players not supported");
 
+                p1 = userRepository.findByUsername(users.get(0))
+                        .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"User not found: " + users.get(0)));
+                p2 = userRepository.findByUsername(users.get(1))
+                        .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"User not found: " + users.get(1)));
+            }
+            default -> throw new ResponseStatusException(BAD_REQUEST, "Unknown mode");
+        }
+        Board board = createAndSaveBoard();
 
+        Game game = new Game(p1,p2,board);
+        game.setStatus(GameStatus.IN_PROGRESS);
+        game.setStartedAt(LocalDateTime.now());
+
+    return GameResponse.GameSummaryDTO(gameRepository.save(game));
     }
 
-    //method to return board generated for game and board_id.
-
-
-    //method to see
 
     @PostMapping("/game")
 
 //=====Helper Methods======/
-    private Board CreateAndSaveBoard(){
-        String [][] = Shuffle
+    private Board createAndSaveBoard(){
+        String [][] grid  = ShuffleUtil.shuffle_board();
+        Board newBoard = new Board();
+        newBoard.setBoardId(UUID.randomUUID().toString());
+        newBoard.setBoardString(flatten(grid));
+        return boardRepository.save(newBoard);
     }
 
-
-
-
+    private String flatten (String[][]grid){
+        StringBuilder flattenBoardString = new StringBuilder();
+        for(int i = 0; i<4;i++){
+            for(int j =0; j<4;j++){
+                flattenBoardString.append(grid[i][j]);
+            }
+            if(i<3){
+                flattenBoardString.append('\n');
+            }
+        }
+        return flattenBoardString.toString();
+    }
+    private String require(String value, String field){
+        if(value==null || value.isBlank()){
+            throw new ResponseStatusException(BAD_REQUEST,field + " is required");
+        }
+        return value.trim();
+    }
+    private User getOrCreateBot(){
+        return userRepository.findByUsername("bot").orElseGet(
+                ()-> userRepository.save(new User("bot","bot@boggle.local","BOR")));
+    }
+    private User requireUser(Integer userId, String fieldName){
+        if(userId==null){
+            throw new ResponseStatusException(BAD_REQUEST,fieldName + " is required");
+        }
+        return userRepository.findById(userId).orElseThrow(
+                ()-> new ResponseStatusException(NOT_FOUND, fieldName + " not found")
+        );
+    }
 }
