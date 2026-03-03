@@ -85,8 +85,6 @@ public class GameController{
         }
     }
 
-
-
     //=====Solo /Bot game =======/
     @GetMapping("/game");
     public GameResponse creatGame(@RequestBody CreateGameRequest request){
