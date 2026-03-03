@@ -188,9 +188,32 @@ if (attempts > 3) { }
 
 ## Version Control
 
+### Branch Naming Convention
+
+All branches must follow a consistent naming format to keep the repository organized and easy to navigate.
+
+**Format:**
+ <your_initials>/<short_description>
+
+**Examples:**
+- as/duplicate_word_prevention
+- pp/backend_file_structure
+- drm/fixing_springboot
+
+**Guidelines:**
+- Use your **initials in lowercase** as the prefix
+- Use a **short, descriptive name** of the task or issue
+- Separate words with **underscores**
+- Keep names concise but clear
+- Branch names should reflect the related issue or feature
+
+**Best Practice:**
+- Create branches from `main`
+- One branch per issue or feature
+- Delete branches after merge to keep the repo clean
+
 ### Commits
-- Write clear, descriptive commit messages
-- Use present tense ("Add feature" not "Added feature")
+- Write clear, descriptive commit messages ("added feature")
 - Reference issue numbers when applicable
 
 ### Before Committing
@@ -216,5 +239,4 @@ Ensure your IntelliJ is configured with:
 - **Tools > Actions on Save**: Enable "Reformat code" (optional but recommended)
 
 ---
-*Last Updated: Sprint 0*
-```
+*Last Updated: Sprint 1*

@@ -26,53 +26,15 @@ public class SessionManager {
     // Respond to post requests to join a session with username and a session code
     @PostMapping("/api/join")
     public Session newSession(@RequestBody JoinSessionRequest request) {
-        String username = requireValue(request.getUsername(), "username");
-        String sessionCode = requireValue(request.getSessionCode(), "sessionCode");
-
-        Session joinSession = sessionRepository.findBySessionCode(sessionCode)
-                .orElseGet(() -> new Session(sessionCode, username));
-
-        joinSession.addUser(username);
-        return sessionRepository.save(joinSession);
-    }
-
-    @PostMapping("/api/session/guest")
-    public SessionResponse createGuestSession(@RequestBody GuestSessionRequest request) {
-        String sessionCode = requireValue(request.getSessionCode(), "sessionCode");
-        String requestedUsername = request.getUsername();
-
-        String baseUsername = (requestedUsername == null || requestedUsername.isBlank()) ? "guest" : requestedUsername.trim();
-        String username = uniqueGuestUsername(baseUsername);
-        String email = "guest+" + UUID.randomUUID() + "@boggle.local";
-        String passwordHash = "GUEST-" + UUID.randomUUID();
-
-        User guestUser = userRepository.save(new User(username, email, passwordHash));
-
-        Session session = sessionRepository.findBySessionCode(sessionCode)
-                .orElseGet(() -> new Session(sessionCode, guestUser.getUsername()));
-        session.addUser(guestUser.getUsername());
-        Session savedSession = sessionRepository.save(session);
-
-        return new SessionResponse(
-                savedSession.getId(),
-                savedSession.getSessionCode(),
-                savedSession.getUsers(),
-                guestUser.getId(),
-                true
-        );
-    }
-
-    @PostMapping("/api/session/login")
-    public SessionResponse createLoginSession(@RequestBody LoginSessionRequest request) {
-        String email = requireValue(request.getEmail(), "email");
-        String passwordHash = requireValue(request.getPasswordHash(), "passwordHash");
-        String sessionCode = requireValue(request.getSessionCode(), "sessionCode");
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Invalid credentials"));
-
-        if (!user.getPasswordHash().equals(passwordHash)) {
-            throw new ResponseStatusException(UNAUTHORIZED, "Invalid credentials");
+        Session joinSession;
+        try {
+            // Try to find existing session with given code
+            joinSession = findSession(request.getSessionCode());
+            joinSession.addUser(request.getUsername());
+        } catch (NoSuchElementException e) {
+            // If no existing session with given code exists, create new
+            joinSession = new Session(request.getSessionCode(), request.getUsername());
+            activeSessions.add(joinSession);
         }
 
         Session session = sessionRepository.findBySessionCode(sessionCode)
@@ -87,6 +49,30 @@ public class SessionManager {
                 user.getId(),
                 false
         );
+    }
+
+    // New endpoint: submit a word, reject duplicates per (sessionCode, username)
+    @PostMapping("/api/submitWord")
+    public SubmitWordResponse submitWord(@RequestBody SubmitWordRequest request) {
+        if (request.getSessionCode() == null || request.getUsername() == null || request.getWord() == null) {
+            return new SubmitWordResponse(false, "INVALID");
+        }
+
+        try {
+            Session session = findSession(request.getSessionCode());
+
+            // Optional: auto-add user if they somehow submit before joining
+            session.addUser(request.getUsername());
+
+            boolean accepted = session.recordWord(request.getUsername(), request.getWord());
+            if (!accepted) {
+                return new SubmitWordResponse(false, "DUPLICATE");
+            }
+            return new SubmitWordResponse(true, "OK");
+
+        } catch (NoSuchElementException e) {
+            return new SubmitWordResponse(false, "INVALID");
+        }
     }
 
     // Look for active sessions by code, throw NoSuchElementException if none found
