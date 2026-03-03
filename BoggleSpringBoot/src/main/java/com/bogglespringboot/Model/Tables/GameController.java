@@ -34,14 +34,14 @@ public class GameController{
 
 
 //initialize repositories
-    public GameManager(GameRepository gameRepository,
+    public GameController(GameRepository gameRepository,
                        BoardRepository boardRepository,
                        FoundWordRepository foundWordRepository,
                        SesssionRepository sesssionRepository){
         this.gameRepository = gameRepository;
         this.boardRepository = boardRepository;
         this.foundWordRepository = foundWordRepository;
-        this.sessionRepository = sesssionRepository;
+        this.sessionRepository = sessionRepository;
     }
 
     public enum GameMode {SOLO, BOT, MULTIPLAYER}
@@ -51,7 +51,7 @@ public class GameController{
         //solo /Bot
         public Integer playerId;
         //multiplayer
-        public string sessionCode;
+        public String sessionCode;
     }
 
     // format for a json response to send to frontend
@@ -59,14 +59,13 @@ public class GameController{
         public Integer gameId;
         public Integer player1Id;
         public Integer player2Id;
-        public Integer boardId;
         public String boardId;
         public String status;
         public static GameResponse GameSummaryDTO(Game currentGame){
             GameResponse gameSummary = new GameResponse();
             gameSummary.gameId = currentGame.getId();
-            gameSummary.player1Id = currentGame.getPlayer1.getId();
-            gameSummary.player2Id = currentGame.getPlayer2.getId();
+            gameSummary.player1Id = currentGame
+            gameSummary.player2Id = currentGame.getPlayer2().getId();
             gameSummary.boardId = currentGame.getBoard().getBoardId();
             gameSummary.status = currentGame.getStatus.name();
             return gameSummary;
@@ -86,7 +85,7 @@ public class GameController{
     }
 
     //=====Solo /Bot game =======/
-    @GetMapping("/game");
+    @GetMapping("/game")
     public GameResponse creatGame(@RequestBody CreateGameRequest request){
         if(request == null || request.mode == null){
             throw new ResponseStatusException(BAD_REQUEST,"Body is required");
@@ -110,7 +109,10 @@ public class GameController{
 
     @PostMapping("/game")
 
-
+//=====Helper Methods======/
+    private Board CreateAndSaveBoard(){
+        String [][] = Shuffle
+    }
 
 
 
