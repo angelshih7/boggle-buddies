@@ -1,5 +1,8 @@
-package com.bogglespringboot.Model.Tables;
-import com.bogglespringboot.Model.Tables.*;
+package com.bogglespringboot.Model.Game;
+import com.bogglespringboot.Model.Tables.Board;
+import com.bogglespringboot.Model.Tables.Game;
+import com.bogglespringboot.Model.Tables.GameStatus;
+import com.bogglespringboot.Model.Tables.User;
 import com.bogglespringboot.Session.Session;
 import com.bogglespringboot.repository.*;
 import com.bogglespringboot.util.ShuffleUtil;
@@ -62,7 +65,7 @@ public class GameController{
         public static GameResponse GameSummaryDTO(Game currentGame){
             GameResponse gameSummary = new GameResponse();
             gameSummary.gameId = currentGame.getId();
-            gameSummary.player1Id = currentGame.getPlayer2().getId();
+            gameSummary.player1Id = currentGame.getPlayer1().getId();
             gameSummary.player2Id = currentGame.getPlayer2().getId();
             gameSummary.boardId = currentGame.getBoard().getBoardId();
             gameSummary.status = currentGame.getStatus().name();
@@ -77,14 +80,14 @@ public class GameController{
             this.boardId = boardId;
             this.boardString = boardString;
         }
-        public static BoardResponse BoadDTO(Board currentBoard){
+        public static BoardResponse BoardDTO(Board currentBoard){
             return new BoardResponse(currentBoard.getBoardId(), currentBoard.getBoardString());
         }
     }
 
     //=====Solo /Bot game =======/
-    @GetMapping("/game")
-    public GameResponse creatGame(@RequestBody CreateGameRequest request){
+    @PostMapping("/game")
+    public GameResponse createGame(@RequestBody CreateGameRequest request){
         if(request == null || request.mode == null){
             throw new ResponseStatusException(BAD_REQUEST,"Body is required");
         }
@@ -94,11 +97,11 @@ public class GameController{
 
         switch (request.mode) {
             case SOLO ->{
-                p1 = requireUser(request.playerId,"player1Id");
+                p1 = requireUser(request.playerId,"playerId");
                 p2 = p1;
             }
             case BOT -> {
-                p1 = requireUser(request.playerId,"Player1Id");
+                p1 = requireUser(request.playerId,"PlayerId");
                 p2 = getOrCreateBot();
             }
             case MULTIPLAYER ->{
@@ -127,7 +130,19 @@ public class GameController{
     }
 
 
-    @PostMapping("/game")
+    @GetMapping("/game/{gameId}")
+    public GameResponse getGame(@PathVariable Integer gameId){
+        Game gameSelected = gameRepository.findById(gameId)
+                .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"Game id not found."));
+        return GameResponse.GameSummaryDTO(gameSelected);
+    }
+
+    @GetMapping("/game/{gameId}/board")
+    public BoardResponse getBoard(@PathVariable Integer gameId){
+        Game gameBoardSelect = gameRepository.findById(gameId)
+                .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"board related to game not found"));
+        return BoardResponse.BoardDTO(gameBoardSelect.getBoard());
+    }
 
 //=====Helper Methods======/
     private Board createAndSaveBoard(){
@@ -158,7 +173,7 @@ public class GameController{
     }
     private User getOrCreateBot(){
         return userRepository.findByUsername("bot").orElseGet(
-                ()-> userRepository.save(new User("bot","bot@boggle.local","BOR")));
+                ()-> userRepository.save(new User("bot","bot@boggle.local","BOT")));
     }
     private User requireUser(Integer userId, String fieldName){
         if(userId==null){
