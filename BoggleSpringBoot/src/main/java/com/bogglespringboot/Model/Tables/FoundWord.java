@@ -56,7 +56,7 @@ public class FoundWord {
     public Dictionary getDictionaryWord() {
         return dictionaryWord;
     }
-    public getFoundAt(){
+    public LocalDateTime getFoundAt() {
         return foundAt;
     }
 
