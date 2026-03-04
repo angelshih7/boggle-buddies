@@ -1,4 +1,4 @@
-INSERT INTO dictionary (word, point_value) VALUES
+INSERT IGNORE INTO dictionary (word, point_value) VALUES
 ('aardvark', 11),
 ('aardwolf', 11),
 ('aalii', 2),
