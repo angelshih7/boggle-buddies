@@ -24,7 +24,6 @@ DROP TABLE IF EXISTS `boards`;
 CREATE TABLE `boards` (
   `board_id` varchar(50) NOT NULL,
   `board_string` text NOT NULL,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`board_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -58,7 +57,6 @@ CREATE TABLE `found_words` (
   `player_id` int NOT NULL,
   `game_id` int NOT NULL,
   `dictionary_word_id` int NOT NULL,
-  `found_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_word_per_player_per_game` (`player_id`,`game_id`,`dictionary_word_id`),
   KEY `fk_found_game` (`game_id`),
@@ -79,7 +77,7 @@ DROP TABLE IF EXISTS `games`;
 CREATE TABLE `games` (
   `id` int NOT NULL AUTO_INCREMENT,
   `player1_id` int NOT NULL,
-  `player2_id` int NOT NULL,
+  `player2_id` int,
   `board_id` varchar(50) NOT NULL,
   `winner_player_id` int DEFAULT NULL,
   `status` enum('WAITING','ACTIVE','FINISHED') NOT NULL DEFAULT 'WAITING',
