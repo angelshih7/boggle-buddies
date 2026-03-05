@@ -15,7 +15,7 @@ import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.*;
 
-
+import org.springframework.http.HttpStatus;
 /*
 Rest API for games table manager.
 It manages every request to the backend by frontend in relation to the table.
@@ -66,7 +66,7 @@ public class GameController{
             GameResponse gameSummary = new GameResponse();
             gameSummary.gameId = currentGame.getId();
             gameSummary.player1Id = currentGame.getPlayer1().getId();
-            gameSummary.player2Id = currentGame.getPlayer2().getId();
+            gameSummary.player2Id = (currentGame.getPlayer2() == null) ? null : currentGame.getPlayer2().getId();
             gameSummary.boardId = currentGame.getBoard().getBoardId();
             gameSummary.status = currentGame.getStatus().name();
             return gameSummary;
@@ -86,6 +86,7 @@ public class GameController{
     }
 
     //=====Solo /Bot game =======/
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/game")
     public GameResponse createGame(@RequestBody CreateGameRequest request){
         if(request == null || request.mode == null){
@@ -98,7 +99,7 @@ public class GameController{
         switch (request.mode) {
             case SOLO ->{
                 p1 = requireUser(request.playerId,"playerId");
-                p2 = p1;
+                p2 = null;
             }
             case BOT -> {
                 p1 = requireUser(request.playerId,"PlayerId");
@@ -144,7 +145,7 @@ public class GameController{
         return BoardResponse.BoardDTO(gameBoardSelect.getBoard());
     }
 
-//=====Helper Methods======/
+    //=====Helper Methods======/
     private Board createAndSaveBoard(){
         String [][] grid  = ShuffleUtil.shuffle_board();
         Board newBoard = new Board();

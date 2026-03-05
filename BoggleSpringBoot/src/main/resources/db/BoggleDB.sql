@@ -47,29 +47,6 @@ CREATE TABLE `dictionary` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `found_words`
---
-
-DROP TABLE IF EXISTS `found_words`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `found_words` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `player_id` int NOT NULL,
-  `game_id` int NOT NULL,
-  `dictionary_word_id` int NOT NULL,
-  `found_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_word_per_player_per_game` (`player_id`,`game_id`,`dictionary_word_id`),
-  KEY `fk_found_game` (`game_id`),
-  KEY `fk_found_dictionary` (`dictionary_word_id`),
-  CONSTRAINT `fk_found_dictionary` FOREIGN KEY (`dictionary_word_id`) REFERENCES `dictionary` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_found_game` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_found_player` FOREIGN KEY (`player_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
 -- Table structure for table `games`
 --
 
@@ -79,10 +56,10 @@ DROP TABLE IF EXISTS `games`;
 CREATE TABLE `games` (
   `id` int NOT NULL AUTO_INCREMENT,
   `player1_id` int NOT NULL,
-  `player2_id` int NOT NULL,
+  `player2_id` INT DEFAULT NULL,
   `board_id` varchar(50) NOT NULL,
   `winner_player_id` int DEFAULT NULL,
-  `status` enum('WAITING','ACTIVE','FINISHED') NOT NULL DEFAULT 'WAITING',
+  `status` enum('WAITING','IN_PROGRESS','FINISHED') NOT NULL DEFAULT 'WAITING',
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `started_at` datetime DEFAULT NULL,
   `finished_at` datetime DEFAULT NULL,
@@ -96,6 +73,29 @@ CREATE TABLE `games` (
   CONSTRAINT `fk_game_player2` FOREIGN KEY (`player2_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_game_winner` FOREIGN KEY (`winner_player_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `chk_different_players` CHECK ((`player1_id` <> `player2_id`))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `found_words`
+--
+
+DROP TABLE IF EXISTS `found_words`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `found_words` (
+                               `id` int NOT NULL AUTO_INCREMENT,
+                               `player_id` int NOT NULL,
+                               `game_id` int NOT NULL,
+                               `dictionary_word_id` int NOT NULL,
+                               `found_at` datetime DEFAULT CURRENT_TIMESTAMP,
+                               PRIMARY KEY (`id`),
+                               UNIQUE KEY `unique_word_per_player_per_game` (`player_id`,`game_id`,`dictionary_word_id`),
+                               KEY `fk_found_game` (`game_id`),
+                               KEY `fk_found_dictionary` (`dictionary_word_id`),
+                               CONSTRAINT `fk_found_dictionary` FOREIGN KEY (`dictionary_word_id`) REFERENCES `dictionary` (`id`) ON DELETE CASCADE,
+                               CONSTRAINT `fk_found_game` FOREIGN KEY (`game_id`) REFERENCES `games` (`id`) ON DELETE CASCADE,
+                               CONSTRAINT `fk_found_player` FOREIGN KEY (`player_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

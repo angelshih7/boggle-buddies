@@ -21,8 +21,8 @@ public class Game {
     @JoinColumn(name = "player1_id", nullable = false)
     private User player1;
 
-    @ManyToOne
-    @JoinColumn(name = "player2_id", nullable = false)
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "player2_id", nullable = true)
     private User player2;
 
     @ManyToOne
