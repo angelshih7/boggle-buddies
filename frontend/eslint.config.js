@@ -22,7 +22,8 @@ export default [
       "react-refresh": reactRefresh
     },
     rules: {
-      ...reactHooks.configs.recommended.rules
+      ...reactHooks.configs.recommended.rules,
+      "no-unused-vars": "warn"
     }
   }
 ];
