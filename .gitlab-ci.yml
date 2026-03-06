@@ -2,7 +2,7 @@ stages:
   - lint
 
 lint-backend:
-  image: gradle:8.5-jdk17
+  image: gradle:8.5-jdk21
   stage: lint
   script:
     - cd BoggleSpringBoot
