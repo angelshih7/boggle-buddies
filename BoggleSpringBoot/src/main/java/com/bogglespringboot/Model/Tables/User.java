@@ -58,9 +58,13 @@ public class User {
     @OneToMany(mappedBy = "player", fetch = FetchType.LAZY)
     private List<FoundWord> foundWords = new ArrayList<>();
 
-    //Constructur
+    @Column(name="is_guest", nullable=false)
+    private boolean isGuest = false;
 
-    //JPA requirment
+    public boolean isGuest() { return isGuest; }
+    public void setGuest(boolean guest) { isGuest = guest; }
+
+    //Constructur
     protected User() {
 
     }

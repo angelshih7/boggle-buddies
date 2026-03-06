@@ -85,6 +85,7 @@ public class GameController{
         }
     }
 
+
     //=====Solo /Bot game =======/
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/game")
@@ -144,6 +145,11 @@ public class GameController{
                 .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"board related to game not found"));
         return BoardResponse.BoardDTO(gameBoardSelect.getBoard());
     }
+
+    @PostMapping("/game/board")
+    public BoardResponse getBoardSample(){
+        Board boardSample = createAndSaveBoard();
+        return BoardResponse.BoardDTO(boardSample);    }
 
     //=====Helper Methods======/
     private Board createAndSaveBoard(){
