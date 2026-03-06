@@ -23,7 +23,6 @@ export default [
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "no-unused-vars": "warn"
     }
   }
 ];
