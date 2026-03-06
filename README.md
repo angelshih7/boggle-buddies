@@ -69,14 +69,12 @@ erDiagram
     boards {
         varchar board_id PK
         text board_string
-        datetime created_at
     }
 
     dictionary {
         int id PK
         string word
         int point_value
-        datetime created_at
     }
 
     found_words {
@@ -84,7 +82,6 @@ erDiagram
         int player_id FK
         int game_id FK
         int dictionary_word_id FK
-        datetime found_at
     }
 ```
 
