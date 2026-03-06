@@ -1,13 +1,17 @@
-package com.bogglespringboot.Session;
+package com.bogglespringboot.Model.Controllers;
 
 import java.util.ArrayList;
 
+import com.bogglespringboot.Session.JoinSessionRequest;
+import com.bogglespringboot.Session.Session;
+import com.bogglespringboot.Session.SubmitWordRequest;
+import com.bogglespringboot.Session.SubmitWordResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.NoSuchElementException;
 
 @RestController
-public class SessionManager {
+public class SessionController {
     // Might be temporary if we start a session database
     ArrayList<Session> activeSessions = new ArrayList<>();
 
@@ -55,7 +59,7 @@ public class SessionManager {
     Session findSession(String sessionCode) throws NoSuchElementException {
         // Search for session code in active sessions
         for (Session activeSession : activeSessions) {
-            if (activeSession.sessionCode.equals(sessionCode)) {
+            if (activeSession.getSessionCode().equals(sessionCode)) {
                 // Return session if found
                 return activeSession;
             }

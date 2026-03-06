@@ -1,4 +1,4 @@
-package com.bogglespringboot.Model.Game;
+package com.bogglespringboot.Model.Controllers;
 import com.bogglespringboot.Model.Tables.Board;
 import com.bogglespringboot.Model.Tables.Game;
 import com.bogglespringboot.Model.Tables.GameStatus;
@@ -147,25 +147,13 @@ public class GameController{
 
     //=====Helper Methods======/
     private Board createAndSaveBoard(){
-        String [][] grid  = ShuffleUtil.shuffle_board();
+        String flattened  = ShuffleUtil.shuffle_board().flattened;
         Board newBoard = new Board();
         newBoard.setBoardId(UUID.randomUUID().toString());
-        newBoard.setBoardString(flatten(grid));
+        newBoard.setBoardString(flattened);
         return boardRepository.save(newBoard);
     }
 
-    private String flatten (String[][]grid){
-        StringBuilder flattenBoardString = new StringBuilder();
-        for(int i = 0; i<4;i++){
-            for(int j =0; j<4;j++){
-                flattenBoardString.append(grid[i][j]);
-            }
-            if(i<3){
-                flattenBoardString.append('\n');
-            }
-        }
-        return flattenBoardString.toString();
-    }
     private String require(String value, String field){
         if(value==null || value.isBlank()){
             throw new ResponseStatusException(BAD_REQUEST,field + " is required");

@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface DictionaryRepository extends JpaRepository<Dictionary, Integer> {
     Optional<Dictionary> findByWord(String word);
+    Optional<Dictionary> findByWordIgnoreCase(String word);
+
 }
