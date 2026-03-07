@@ -1,0 +1,18 @@
+stages:
+  - lint
+
+lint-backend:
+  image: gradle:8.5-jdk21
+  stage: lint
+  script:
+    - cd BoggleSpringBoot
+    - ./gradlew check
+
+lint-frontend:
+  image: node:20
+  stage: lint
+  script:
+    - cd frontend
+    - npm install
+    - npm install eslint@8
+    - npm run lint
