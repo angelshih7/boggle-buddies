@@ -19,14 +19,14 @@ public class Session {
 
     // Constructor assumes session is started by one user which
     // should immediately be added to the session they created
-    Session(String sessionCode, String createdByUser) {
+   public Session(String sessionCode, String createdByUser) {
         users.add(createdByUser);
         submittedWordsByUser.put(createdByUser, new HashSet<>());
         this.sessionCode = sessionCode;
     }
 
     // Add user helper
-    void addUser(String username) {
+    public void addUser(String username) {
         if (!users.contains(username)) {
             users.add(username);
         }
@@ -34,7 +34,7 @@ public class Session {
     }
 
     // Returns true if word is new, false if duplicate
-    boolean recordWord(String username, String wordRaw) {
+   public boolean recordWord(String username, String wordRaw) {
         if (username == null || wordRaw == null) return false;
 
         String word = wordRaw.trim().toLowerCase();

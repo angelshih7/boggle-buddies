@@ -1,4 +1,4 @@
-package com.bogglespringboot.Model.Game;
+package com.bogglespringboot.Model.Controllers;
 import com.bogglespringboot.Model.Tables.Board;
 import com.bogglespringboot.Model.Tables.Game;
 import com.bogglespringboot.Model.Tables.GameStatus;
@@ -15,7 +15,7 @@ import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.*;
 
-
+import org.springframework.http.HttpStatus;
 /*
 Rest API for games table manager.
 It manages every request to the backend by frontend in relation to the table.
@@ -66,7 +66,7 @@ public class GameController{
             GameResponse gameSummary = new GameResponse();
             gameSummary.gameId = currentGame.getId();
             gameSummary.player1Id = currentGame.getPlayer1().getId();
-            gameSummary.player2Id = currentGame.getPlayer2().getId();
+            gameSummary.player2Id = (currentGame.getPlayer2() == null) ? null : currentGame.getPlayer2().getId();
             gameSummary.boardId = currentGame.getBoard().getBoardId();
             gameSummary.status = currentGame.getStatus().name();
             return gameSummary;
@@ -85,7 +85,9 @@ public class GameController{
         }
     }
 
+
     //=====Solo /Bot game =======/
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/game")
     public GameResponse createGame(@RequestBody CreateGameRequest request){
         if(request == null || request.mode == null){
@@ -98,7 +100,7 @@ public class GameController{
         switch (request.mode) {
             case SOLO ->{
                 p1 = requireUser(request.playerId,"playerId");
-                p2 = p1;
+                p2 = null;
             }
             case BOT -> {
                 p1 = requireUser(request.playerId,"PlayerId");
@@ -144,27 +146,20 @@ public class GameController{
         return BoardResponse.BoardDTO(gameBoardSelect.getBoard());
     }
 
-//=====Helper Methods======/
+    @PostMapping("/game/board")
+    public BoardResponse getBoardSample(){
+        Board boardSample = createAndSaveBoard();
+        return BoardResponse.BoardDTO(boardSample);    }
+
+    //=====Helper Methods======/
     private Board createAndSaveBoard(){
-        String [][] grid  = ShuffleUtil.shuffle_board();
+        String flattened  = ShuffleUtil.shuffle_board().flattened;
         Board newBoard = new Board();
         newBoard.setBoardId(UUID.randomUUID().toString());
-        newBoard.setBoardString(flatten(grid));
+        newBoard.setBoardString(flattened);
         return boardRepository.save(newBoard);
     }
 
-    private String flatten (String[][]grid){
-        StringBuilder flattenBoardString = new StringBuilder();
-        for(int i = 0; i<4;i++){
-            for(int j =0; j<4;j++){
-                flattenBoardString.append(grid[i][j]);
-            }
-            if(i<3){
-                flattenBoardString.append('\n');
-            }
-        }
-        return flattenBoardString.toString();
-    }
     private String require(String value, String field){
         if(value==null || value.isBlank()){
             throw new ResponseStatusException(BAD_REQUEST,field + " is required");

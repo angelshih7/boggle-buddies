@@ -7,13 +7,14 @@ public class ValidateAnswers{
 
 
 
-    public static boolean ValidateAnswer(String wordGuessed, String[][]board, Dictionary dictionary){
+    public static boolean isValidOnBoard(String wordGuessed, String[][]board){
         //checks correct word guessed length
-        if(wordGuessed.length()<3){
-            return false;
-        }
+        if (wordGuessed == null) return false;
+
+        String word = wordGuessed.trim().toUpperCase();
+
         //checks correct word
-        if(!existOnBoard(board,wordGuessed)){
+        if(!existOnBoard(board,word)){
             return false;
         }
         return true;
