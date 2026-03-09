@@ -2,6 +2,8 @@ package com.example.Boggle;
 
 import com.example.Boggle.repository.GameRepository;
 import com.example.Boggle.repository.UserRepository;
+import com.example.Boggle.Model.Tables.User;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +17,9 @@ import java.net.http.HttpResponse;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+// Run on a random port
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+
 class GameAPITests {
 
     @Autowired
@@ -32,11 +36,19 @@ class GameAPITests {
         gameRepository.deleteAll();
     }
 
+    @AfterEach
+    void tearDown() {
+        gameRepository.deleteAll();
+        userRepository.deleteAll();
+    }
+
     @Test
     // Creates one session, replaces old create session test.
-    /* TODO returns 404 due to gameId not found, should create game
-       (endpoint *is found*, because malformed requests return 400 instead) */
     void testCreateNewSession() throws Exception {
+        // Create mock user and obtain id
+        User testUser = new User("test_user", "test@nowhere.com", "someHash");
+        testUser = userRepository.save(testUser);
+
         // Mock client for testing purposes
         HttpClient client = HttpClient.newHttpClient();
 
@@ -44,7 +56,7 @@ class GameAPITests {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + "/api/game"))
                 .POST(HttpRequest.BodyPublishers.ofString(
-                        "{\"mode\": 1, \"playerId\": 0, \"gameId\": 0}"
+                        "{\"mode\": 0, \"playerId\": " + testUser.getId() + ", \"gameId\": 0}"
                 ))
                 .header("Content-Type", "application/json")
                 .build();
@@ -53,7 +65,7 @@ class GameAPITests {
                 client.send(request, HttpResponse.BodyHandlers.ofString());
 
         // Check that our request was acknowledged
-        assertEquals(200, response.statusCode());
+        assertEquals(201, response.statusCode());
 
         // Close client resources
         client.close();

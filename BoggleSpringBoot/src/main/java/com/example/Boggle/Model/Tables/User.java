@@ -64,7 +64,7 @@ public class User {
     public boolean isGuest() { return isGuest; }
     public void setGuest(boolean guest) { isGuest = guest; }
 
-    //Constructur
+    //Constructor
     protected User() {
 
     }

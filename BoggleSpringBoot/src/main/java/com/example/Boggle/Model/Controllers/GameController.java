@@ -158,7 +158,6 @@ public class GameController{
     return GameResponse.GameSummaryDTO(gameRepository.save(game));
     }
 
-
     @GetMapping("/game/{gameId}")
     public GameResponse getGame(@PathVariable Integer gameId){
         Game gameSelected = gameRepository.findById(gameId)
