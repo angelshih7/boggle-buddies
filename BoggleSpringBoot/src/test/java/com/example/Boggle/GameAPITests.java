@@ -1,6 +1,6 @@
 package com.example.Boggle;
 
-import com.example.Boggle.Model.Tables.User;
+import com.example.Boggle.repository.GameRepository;
 import com.example.Boggle.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,13 +14,14 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class SessionManagerTests {
+class GameAPITests {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private GameRepository gameRepository;
 
     @LocalServerPort
     int port;
@@ -28,9 +29,37 @@ class SessionManagerTests {
     @BeforeEach
     void setup() {
         userRepository.deleteAll();
+        gameRepository.deleteAll();
     }
 
-    /* These tests are all broken, SessionRepository doesn't work.
+    @Test
+    // Creates one session, replaces old create session test.
+    /* TODO returns 404 due to gameId not found, should create game
+       (endpoint *is found*, because malformed requests return 400 instead) */
+    void testCreateNewSession() throws Exception {
+        // Mock client for testing purposes
+        HttpClient client = HttpClient.newHttpClient();
+
+        // Make request with JSON corresponding to Session member variables
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/game"))
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        "{\"mode\": 1, \"playerId\": 0, \"gameId\": 0}"
+                ))
+                .header("Content-Type", "application/json")
+                .build();
+
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // Check that our request was acknowledged
+        assertEquals(200, response.statusCode());
+
+        // Close client resources
+        client.close();
+    }
+
+    /* These tests are all broken due to changes that used SessionRepository.
     @Test
     // Creates one session with one user and checks that code and username were saved
     void testCreateNewSession() throws Exception {
@@ -41,7 +70,7 @@ class SessionManagerTests {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + "/api/join"))
                 .POST(HttpRequest.BodyPublishers.ofString(
-                        "{\"username\":\"testUser\", \"sessionCode\":\"mySessionCode\"}"
+                        "{\"username\":\"testUser\", \"gameCode\":\"mySessionCode\"}"
                 ))
                 .header("Content-Type", "application/json")
                 .build();
@@ -64,7 +93,7 @@ class SessionManagerTests {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + "/api/session/guest"))
                 .POST(HttpRequest.BodyPublishers.ofString(
-                        "{\"username\":\"guestUser\", \"sessionCode\":\"guest-room\"}"
+                        "{\"username\":\"guestUser\", \"gameCode\":\"guest-room\"}"
                 ))
                 .header("Content-Type", "application/json")
                 .build();
@@ -88,7 +117,7 @@ class SessionManagerTests {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create("http://localhost:" + port + "/api/session/login"))
                 .POST(HttpRequest.BodyPublishers.ofString(
-                        "{\"email\":\"registered@example.com\", \"passwordHash\":\"hash123\", \"sessionCode\":\"login-room\"}"
+                        "{\"email\":\"registered@example.com\", \"passwordHash\":\"hash123\", \"gameCode\":\"login-room\"}"
                 ))
                 .header("Content-Type", "application/json")
                 .build();

@@ -3,9 +3,6 @@ import com.example.Boggle.Model.Tables.Board;
 import com.example.Boggle.Model.Tables.Game;
 import com.example.Boggle.Model.Tables.GameStatus;
 import com.example.Boggle.Model.Tables.User;
-import com.example.Boggle.repository.*;
-import com.example.Boggle.Session.SubmitWordRequest;
-import com.example.Boggle.Session.SubmitWordResponse;
 import com.example.Boggle.repository.BoardRepository;
 import com.example.Boggle.repository.FoundWordRepository;
 import com.example.Boggle.repository.GameRepository;
@@ -15,8 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.*;
@@ -55,7 +50,7 @@ public class GameController{
         //solo /Bot
         public Integer playerId;
         //multiplayer
-        public String sessionCode;
+        public Integer gameId;
     }
 
     // format for a json response to send to frontend
@@ -89,7 +84,7 @@ public class GameController{
     }
 
     /* Needs refactoring. Session class removed.
-    // New endpoint: submit a word, reject duplicates per (sessionCode, username)
+    // New endpoint: submit a word, reject duplicates per (gameCode, username)
     @PostMapping("/game/submitWord")
     public SubmitWordResponse submitWord(@RequestBody SubmitWordRequest request) {
         if (request.getSessionCode() == null || request.getUsername() == null || request.getWord() == null) {
@@ -124,38 +119,37 @@ public class GameController{
 
         User p1;
         User p2;
+        Game game;
 
         switch (request.mode) {
             case SOLO ->{
                 p1 = requireUser(request.playerId,"playerId");
                 p2 = null;
+                Board board = createAndSaveBoard();
+                game = new Game(p1,p2,board);
             }
             case BOT -> {
                 p1 = requireUser(request.playerId,"PlayerId");
                 p2 = getOrCreateBot();
+                Board board = createAndSaveBoard();
+                game = new Game(p1,p2,board);
             }
-            /* Needs refactoring. Session class removed.
             case MULTIPLAYER ->{
-                String code = require(request.sessionCode,"sessionCode");
-                Session session = sessionRepository.findBySessionCode(code)
-                        .orElseThrow(()->new ResponseStatusException(NOT_FOUND,"session not found"));
-
-                List<String> users = session.getUsers();
-                if(users.size() < 2) throw new ResponseStatusException(CONFLICT,"Need 2 Players in session");
-                if(users.size() > 2) throw  new ResponseStatusException(CONFLICT,"More than 2 Players not supported");
-
-                p1 = userRepository.findByUsername(users.get(0))
-                        .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"User not found: " + users.get(0)));
-                p2 = userRepository.findByUsername(users.get(1))
-                        .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"User not found: " + users.get(1)));
+                // TODO: Probably don't want to point-blank catch everything, could hide bugs
+                try {
+                    // Game was created by p1 and already exists, join
+                    game = gameRepository.getById(request.gameId);
+                    game.setPlayer2(requireUser(request.playerId,"PlayerId"));
+                } catch (Exception e) {
+                    // Game not created yet, become p1
+                    Board board = createAndSaveBoard();
+                    p1 = requireUser(request.playerId,"PlayerId");
+                    game = new Game(p1,null,board);
+                }
             }
-
-             */
             default -> throw new ResponseStatusException(BAD_REQUEST, "Unknown mode");
         }
-        Board board = createAndSaveBoard();
 
-        Game game = new Game(p1,p2,board);
         game.setStatus(GameStatus.IN_PROGRESS);
         game.setStartedAt(LocalDateTime.now());
 
