@@ -8,6 +8,7 @@ import com.example.Boggle.repository.FoundWordRepository;
 import com.example.Boggle.repository.GameRepository;
 import com.example.Boggle.repository.UserRepository;
 import com.example.Boggle.util.ShuffleUtil;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -135,12 +136,13 @@ public class GameController{
                 game = new Game(p1,p2,board);
             }
             case MULTIPLAYER ->{
-                // TODO: Probably don't want to point-blank catch everything, could hide bugs
+                // Attempted to adapt previously-Session-related join functionality here.
+                // Need game objects to test.
                 try {
                     // Game was created by p1 and already exists, join
-                    game = gameRepository.getById(request.gameId);
+                    game = gameRepository.getReferenceById(request.gameId);
                     game.setPlayer2(requireUser(request.playerId,"PlayerId"));
-                } catch (Exception e) {
+                } catch (EntityNotFoundException e) {
                     // Game not created yet, become p1
                     Board board = createAndSaveBoard();
                     p1 = requireUser(request.playerId,"PlayerId");
