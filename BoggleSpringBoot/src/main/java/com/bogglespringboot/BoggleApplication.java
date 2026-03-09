@@ -1,4 +1,4 @@
-package com.example.Boggle;
+package com.bogglespringboot;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

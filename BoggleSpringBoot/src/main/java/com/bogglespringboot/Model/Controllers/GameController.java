@@ -28,7 +28,6 @@ public class GameController{
     //hold value of the repository created
     private final GameRepository gameRepository;
     private final BoardRepository boardRepository;
-    private final FoundWordRepository foundWordRepository;
     private final SessionRepository sessionRepository;
     private final UserRepository userRepository;
 
@@ -36,11 +35,9 @@ public class GameController{
     //initialize repositories
     public GameController(GameRepository gameRepository,
                           BoardRepository boardRepository,
-                          FoundWordRepository foundWordRepository,
                           SessionRepository sessionRepository, UserRepository userRepository){
         this.gameRepository = gameRepository;
         this.boardRepository = boardRepository;
-        this.foundWordRepository = foundWordRepository;
         this.sessionRepository = sessionRepository;
         this.userRepository = userRepository;
     }
