@@ -1,12 +1,29 @@
 stages:
   - lint
+  - test
 
 lint-backend:
   image: gradle:8.5-jdk21
   stage: lint
   script:
     - cd BoggleSpringBoot
-    - ./gradlew check
+    - ./gradlew clean pmdMain pmdTest
+  artifacts:
+    when: always
+    paths:
+      - build/reports/pmd/
+
+test-backend:
+  image: gradle:8.5-jdk21
+  stage: test
+  script:
+    - cd BoggleSpringBoot
+    - ./gradlew test
+  artifacts:
+    when: always
+    paths:
+      - BoggleSpringBoot/build/test-results
+      - BoggleSpringBoot/build/reports/tests
 
 lint-frontend:
   image: node:20
