@@ -2,54 +2,157 @@ package com.example.Boggle;
 
 
 import com.example.Boggle.Model.Tables.*;
+import com.example.Boggle.Security.PasswordUtil;
 import com.example.Boggle.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito.*;
 
 
-import java.util.Optional;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import com.example.Boggle.Model.Controllers.UserController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
-public class UserAPITests {
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+
+public class UserIntegrationAPITests {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @LocalServerPort
+    int port;
+
+    @BeforeEach
+    void setup() {
+        userRepository.deleteAll();
+    }
+
+    @AfterEach
+    void tearDown() {
+        userRepository.deleteAll();
+    }
 
 
     @Test
-    void registerCreateUserSuccesfully(){
-        UserRepository userRepository = mock(UserRepository.class);
-        UserController userController = new UserController(userRepository);
+    void testRegisterCreateUser() throws Exception{
+        HttpClient client = HttpClient.newHttpClient();
 
-        UserController.RegisterRequest req = new UserController.RegisterRequest();
+        HttpRequest request = HttpRequest.newBuilder().
+                uri(URI.create("http://localhost:" + port + "/api/users/register"))
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        """
+                                {
+                                 "username": "diego9",
+                                 "email": "diego@test.com",
+                                 "password": "Secret123"
+                                }
+                              """
+                ))
+                .header("Content-Type","application/json")
+                .build();
 
-        req.username = "diego9";
-        req.email = "diego@test.com";
-        req.password="Secret123";
-        when(userRepository.existsByUsername("diego9")).thenReturn(false);
-        when(userRepository.findByEmail("diego@test.com")).thenReturn(Optional.empty());
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        User savedUser = new User("diego9","diego@test.com","someStoredHash");
-        savedUser.setGuest(false);
+        assertEquals(201, response.statusCode());
+        assertTrue(userRepository.findByUsername("diego9").isPresent());
 
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        client.close();
+    }
+    @Test
+    void registerCreateGuest() throws Exception{
+        HttpClient client = HttpClient.newHttpClient();
 
-        UserController.UserResponse response = userController.register(req);
+        HttpRequest request = HttpRequest.newBuilder().
+                uri(URI.create("http://localhost:" + port + "/api/users/guest"))
+                .POST(HttpRequest.BodyPublishers.ofString("{}"))
+                .header("Content-Type","application/json")
+                .build();
 
-        assertEquals("diego9",response.username);
-        assertEquals("diego@test.com", response.email);
+        HttpResponse response = client.send(request,HttpResponse.BodyHandlers.ofString());
+        assertEquals(201, response.statusCode());
+        assertEquals(1, userRepository.count());
+
+        client.close();
 
     }
-    void registerCreateGuest(){
 
+    @Test
+    void registerCreateUser() throws Exception{
+        String storedHash = PasswordUtil.hash("Secret123");
+
+        User user = new User("diego9", "diego@test.com", storedHash);
+        user.setGuest(false);
+        userRepository.save(user);
+
+        HttpClient client = HttpClient.newHttpClient();
+
+        HttpRequest request = HttpRequest.newBuilder().
+                uri(URI.create("http://localhost:" + port + "/api/users/login"))
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        """
+                        {
+                          "username": "diego9",
+                          "password": "Secret123"
+                        }
+                        """
+                ))
+                .header("Content-Type","application/json")
+                .build();
+
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        System.out.println("status = " + response.statusCode());
+        System.out.println("body = " + response.body());
+
+        assertEquals(200, response.statusCode());
+
+        client.close();
     }
 
-    void registerCreateUser(){
+    @Test
+    void testRegisterUserRepeatedUsername() throws Exception{
+        User user = new User("diego9", "diego@test.com", "someHash");
+        user.setGuest(false);
+        userRepository.save(user);
+
+        HttpClient client = HttpClient.newHttpClient();
+
+        HttpRequest request = HttpRequest.newBuilder().
+                uri(URI.create("http://localhost:" + port + "/api/users/register"))
+                .POST(HttpRequest.BodyPublishers.ofString(
+                        """
+                        {
+                          "username": "diego9",
+                          "email": "new@test.com",
+                          "password": "Secret123"
+                        }
+                        """
+                ))
+                .header("Content-Type","application/json")
+                .build();
+
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        System.out.println("status = " + response.statusCode());
+        System.out.println("body = " + response.body());
+
+        assertEquals(409, response.statusCode());
+        assertEquals(1, userRepository.count());
+
+        client.close();
 
     }
 }
