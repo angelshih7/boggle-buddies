@@ -1,7 +1,8 @@
-package com.bogglespringboot.Security;
+import com.example.Boggle.Security.PasswordUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import static org.junit.jupiter.api.Assertions.*;
+
 
 /**
  * Unit tests for the PasswordUtil.java

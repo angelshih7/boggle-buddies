@@ -1,4 +1,4 @@
-import BoggleSpringBoot.src.main.java.com.example.Boggle.Security.PasswordUtil.java
+package com.example.Boggle.Security;
 import java.security.MessageDigest;
 import java.util.Base64;
 
