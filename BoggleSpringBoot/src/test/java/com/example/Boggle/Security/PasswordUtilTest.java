@@ -1,3 +1,5 @@
+package com.example.Boggle.Security;
+
 import com.example.Boggle.Security.PasswordUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
