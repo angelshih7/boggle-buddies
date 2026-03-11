@@ -14,17 +14,28 @@ import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.*;
 
+/**
+ *
+ */
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
     private final UserRepository userRepository;
     private static final SecureRandom rng = new SecureRandom();
 
+    /**
+     *
+     * @param userRepository
+     */
     public UserController(UserRepository userRepository){
         this.userRepository = userRepository;
     }
 
     //Data transfer objects
+
+    /**
+     *
+     */
     public static class RegisterRequest{
         public String username;
         public String email;
@@ -154,6 +165,10 @@ public class UserController {
         return candidate;
     }
 
+    /**
+     *
+     * @return
+     */
     private String generateGuestUsername() { return "Guest-" + shortToken(); }
 
     private String shortToken() {

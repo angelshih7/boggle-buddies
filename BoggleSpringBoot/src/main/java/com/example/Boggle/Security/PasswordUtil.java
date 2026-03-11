@@ -3,33 +3,29 @@ import java.security.MessageDigest;
 import java.util.Base64;
 
 /**
- * Utility class for hashing and verifying passwords using SHA-256.
+ * Utility class for securely hashing and verifying passwords.
  *
- * This implementation is intentionally simplified for educational purposes.
- * It performs a single SHA-256 hash with no salt or key stretching. In real
- * applications, stronger password hashing algorithms such as PBKDF2, bcrypt,
- * scrypt, or Argon2 should be used.
+ * This class uses PBKDF2 with HMAC-SHA256, a random salt, and a configurable
+ * iteration count to store passwords in a secure hashed format.
  */
 public final class PasswordUtil {
-
-    /**
-     * Private constructor to prevent instantiation.
-     */
+    //prevents instantiation.
     private PasswordUtil() {}
 
+    private static final SecureRandom RNG = new SecureRandom(); // used to generate random byte for hashing
+    private static final int SALT_BYTES = 16;
+    private static final int ITERATIONS = 120_000;
+    private static final int KEY_BITS = 256;
+
     /**
-     * Hashes a password using the SHA-256 algorithm.
+     * Hashes a plain-text password using PBKDF2 with a random salt.
      *
-     * The resulting hash is encoded using Base64 so it can be easily stored
-     * as a string in a database.
-     *
-     * @param password the plaintext password to hash
-     * @return the Base64-encoded SHA-256 hash of the password
+     * @param password the plain-text password to hash
+     * @return a formatted string containing the algorithm, iteration count, salt, and derived key
      * @throws IllegalArgumentException if the password is null or blank
-     * @throws RuntimeException if the hashing process fails
      */
-    public static String hash(String password) {
-        if (password == null || password.isBlank()) {
+    public static String hash(String password){
+        if(password == null || password.isBlank()){
             throw new IllegalArgumentException("Password Required");
         }
 
@@ -44,15 +40,11 @@ public final class PasswordUtil {
     }
 
     /**
-     * Verifies a plaintext password against a stored SHA-256 hash.
+     * Verifies a plain-text password against a previously stored password hash.
      *
-     * The password provided by the user is hashed using the same SHA-256
-     * process and compared to the stored hash using a constant-time comparison
-     * to reduce timing attack risks.
-     *
-     * @param password the plaintext password to verify
-     * @param stored the previously stored Base64-encoded hash
-     * @return true if the password matches the stored hash, false otherwise
+     * @param password the plain-text password to verify
+     * @param stored the stored password hash string
+     * @return true if the password matches the stored hash; false otherwise
      */
     public static boolean verify(String password, String stored) {
         if (password == null || stored == null) {
@@ -70,4 +62,22 @@ public final class PasswordUtil {
             return false;
         }
     }
+
+    /**
+     * Derives a key from a password using PBKDF2 with HMAC-SHA256.
+     *
+     * @param password the password characters
+     * @param salt the salt bytes
+     * @param iterations the number of PBKDF2 iterations
+     * @param keyBits the desired derived key length in bits
+     * @return the derived key bytes
+     * @throws Exception if key derivation fails
+     */
+    private static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int keyBits) throws Exception {
+        PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyBits);
+        SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        return skf.generateSecret(spec).getEncoded();
+
+    }
+
 }

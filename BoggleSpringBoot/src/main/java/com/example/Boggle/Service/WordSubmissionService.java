@@ -15,10 +15,25 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import com.example.Boggle.util.unflatten;
 
+/**
+ *Service responsible for validating word submission during game.
+ *
+ * Provides the Following Services:
+ * 1. Checks if the Game and Player Exist (avoids allowing word submission with no game or player attached)
+ * 2. Checks if Player belongs to the game to which the submission is taking place.
+ * 3. Checks if the word submitted exist in the dictionary.
+ * 4. Checks if the word is long enough
+ * 5. Checks if the word is valid in the board (side-by-side or diagonal)
+ * 6. Checks if the word has not been submitted (avoid duplicates)
+ */
 public class WordSubmissionService{
 
     //Data Structure for result of word submission.
     @Service
+    /**
+     * Data Structure
+     * Holds the result of a word submission attempt.
+     */
     public static class Result{
         public boolean accepted;
         public String reason;
@@ -31,6 +46,15 @@ public class WordSubmissionService{
     private final DictionaryRepository dictionaryRepository;
     private final FoundWordRepository foundWordRepository;
 
+    /**
+     * Constructs a WordSubmissionService with the repositories required
+     * to validate submitted words and store accepted results.
+     *
+     * @param gameRepository Repository that stores game information.
+     * @param userRepository Repository storing the user and guest.
+     * @param dictionaryRepository Repository that stores words and their point scoring
+     * @param foundWordRepository Repository that holds words found by player during game.
+     */
     public WordSubmissionService(
             GameRepository gameRepository,
             UserRepository userRepository,
@@ -43,6 +67,14 @@ public class WordSubmissionService{
         this.foundWordRepository = foundWordRepository;
     }
 
+    /**
+     * Method Checks if word submission is valid and return Result data structure;
+     *
+     * @param gameId the ID of the game; may refer to a SOLO, BOT, or MULTIPLAYER game
+     * @param playerId Id of player submitting the word.
+     * @param rawWord word submitted by user.
+     * @return Returns Result data structure filled in with required data.
+     */
     @Transactional
     public Result submitWord(Integer gameId, Integer playerId, String rawWord){
         Result out = new Result();
