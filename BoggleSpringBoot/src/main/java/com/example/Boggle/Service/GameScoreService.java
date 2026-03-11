@@ -41,14 +41,15 @@ public class GameScoreService {
         Totals totalOut = new Totals();
         totalOut.player1Id = p1Id;
         totalOut.player2Id = p2Id;
-        totalOut.player1Points = p2Pts;
+        totalOut.player1Points = p1Pts;
+        totalOut.player2Points = p2Pts;
 
         if(p2Pts == null){
             totalOut.winnerPlayerId = p1Id;
         }else if(p1Pts > p2Pts){
-            totalOut.winnerPlayerId = p1Pts;
+            totalOut.winnerPlayerId = p1Id;
         }else if(p2Pts > p1Pts){
-            totalOut.winnerPlayerId = p2Pts;
+            totalOut.winnerPlayerId = p2Id;
         }else{
             totalOut.winnerPlayerId = null;
         }
