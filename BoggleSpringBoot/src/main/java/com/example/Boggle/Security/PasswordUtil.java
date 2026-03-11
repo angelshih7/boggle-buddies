@@ -12,7 +12,6 @@ public final class PasswordUtil {
     //prevents instantiation.
     private PasswordUtil() {}
 
-    private static final SecureRandom RNG = new SecureRandom(); // used to generate random byte for hashing
     private static final int SALT_BYTES = 16;
     private static final int ITERATIONS = 120_000;
     private static final int KEY_BITS = 256;
@@ -61,23 +60,6 @@ public final class PasswordUtil {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    /**
-     * Derives a key from a password using PBKDF2 with HMAC-SHA256.
-     *
-     * @param password the password characters
-     * @param salt the salt bytes
-     * @param iterations the number of PBKDF2 iterations
-     * @param keyBits the desired derived key length in bits
-     * @return the derived key bytes
-     * @throws Exception if key derivation fails
-     */
-    private static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int keyBits) throws Exception {
-        PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyBits);
-        SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-        return skf.generateSecret(spec).getEncoded();
-
     }
 
 }
