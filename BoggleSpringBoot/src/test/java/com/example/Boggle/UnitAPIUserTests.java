@@ -40,19 +40,21 @@ public class UnitAPIUserTests {
        when(userRepository.existsByUsername("diego9")).thenReturn(false);
        when(userRepository.findByEmail("diego@test.com")).thenReturn(Optional.empty());
 
-       User savedUser = new User("diego9","diego@test.com","Secret123");
-       when(userRepository.save(savedUser)).thenReturn(savedUser);
+        User savedUser = new User("diego9", "diego@test.com", "hashed");
+        savedUser.setId(1);
+        savedUser.setGuest(false);
 
-       UserController.UserResponse response =  userController.register(req);
-       savedUser.setGuest(false);
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-       assertNotNull(response);
-       assertEquals("diego9",response.username);
-       assertEquals("diego@test.com",response.email);
+        UserController.UserResponse response = userController.register(req);
 
-       verify(userRepository).existsByUsername("diego9");
-       verify(userRepository).findByEmail("diego@test.com");
-       verify(userRepository).save(any(User.class));
+        assertNotNull(response);
+        assertEquals("diego9", response.username);
+        assertEquals("diego@test.com", response.email);
+
+        verify(userRepository).existsByUsername("diego9");
+        verify(userRepository).findByEmail("diego@test.com");
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
