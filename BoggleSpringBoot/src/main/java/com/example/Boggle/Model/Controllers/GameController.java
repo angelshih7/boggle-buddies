@@ -8,7 +8,6 @@ import com.example.Boggle.repository.FoundWordRepository;
 import com.example.Boggle.repository.GameRepository;
 import com.example.Boggle.repository.UserRepository;
 import com.example.Boggle.util.ShuffleUtil;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -48,10 +47,11 @@ public class GameController{
 
     public static class CreateGameRequest{
         public GameMode mode;
-        //solo /Bot
         public Integer playerId;
-        //multiplayer
-        public Integer gameId;
+    }
+
+    public static class JoinGameRequest{
+        public Integer playerId;
     }
 
     // format for a json response to send to frontend
@@ -118,44 +118,61 @@ public class GameController{
             throw new ResponseStatusException(BAD_REQUEST,"Body is required");
         }
 
-        User p1;
-        User p2;
+        User p1 = requireUser(request.playerId, "playerId");
         Game game;
 
         switch (request.mode) {
             case SOLO ->{
-                p1 = requireUser(request.playerId,"playerId");
-                p2 = null;
-                Board board = createAndSaveBoard();
-                game = new Game(p1,p2,board);
+                game = new Game(p1,null,createAndSaveBoard());
+
             }
             case BOT -> {
-                p1 = requireUser(request.playerId,"PlayerId");
-                p2 = getOrCreateBot();
-                Board board = createAndSaveBoard();
-                game = new Game(p1,p2,board);
+                game = new Game(p1,getOrCreateBot(),createAndSaveBoard());
             }
-            case MULTIPLAYER ->{
-                // Attempted to adapt previously-Session-related join functionality here.
-                // Need game objects to test.
-                try {
-                    // Game was created by p1 and already exists, join
-                    game = gameRepository.getReferenceById(request.gameId);
-                    game.setPlayer2(requireUser(request.playerId,"PlayerId"));
-                } catch (EntityNotFoundException e) {
-                    // Game not created yet, become p1
-                    Board board = createAndSaveBoard();
-                    p1 = requireUser(request.playerId,"PlayerId");
-                    game = new Game(p1,null,board);
-                }
-            }
+            case MULTIPLAYER -> game = new Game(p1, null, createAndSaveBoard());
+
             default -> throw new ResponseStatusException(BAD_REQUEST, "Unknown mode");
         }
 
+        if(request.mode ==GameMode.MULTIPLAYER){
+            game.setStatus(GameStatus.WAITING);
+        }else{
+            game.setStatus(GameStatus.IN_PROGRESS);
+            game.setStartedAt(LocalDateTime.now());
+        }
+
+    return GameResponse.GameSummaryDTO(gameRepository.save(game));
+    }
+
+
+    @PostMapping("/game/{gameId}/join")
+    public GameResponse joinGame(@PathVariable Integer gameId, @RequestBody JoinGameRequest request){
+        if (request == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Body is required");
+        }
+
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game id not found"));
+
+        User player2 = requireUser(request.playerId, "playerId");
+
+        if (game.getStatus() != GameStatus.WAITING) {
+            throw new ResponseStatusException(CONFLICT, "Game is not joinable");
+        }
+
+        if (game.getPlayer2() != null) {
+            throw new ResponseStatusException(CONFLICT, "Game already full");
+        }
+
+        if (game.getPlayer1().getId().equals(player2.getId())) {
+            throw new ResponseStatusException(BAD_REQUEST, "Player cannot join own game");
+        }
+
+        game.setPlayer2(player2);
         game.setStatus(GameStatus.IN_PROGRESS);
         game.setStartedAt(LocalDateTime.now());
 
-    return GameResponse.GameSummaryDTO(gameRepository.save(game));
+        return GameResponse.GameSummaryDTO(gameRepository.save(game));
     }
 
     @GetMapping("/game/{gameId}")
@@ -168,7 +185,7 @@ public class GameController{
     @GetMapping("/game/{gameId}/board")
     public BoardResponse getBoard(@PathVariable Integer gameId){
         Game gameBoardSelect = gameRepository.findById(gameId)
-                .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"board related to game not found"));
+                .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"Board related to game not found"));
         return BoardResponse.BoardDTO(gameBoardSelect.getBoard());
     }
 
@@ -186,12 +203,7 @@ public class GameController{
         return boardRepository.save(newBoard);
     }
 
-    private String require(String value, String field){
-        if(value==null || value.isBlank()){
-            throw new ResponseStatusException(BAD_REQUEST,field + " is required");
-        }
-        return value.trim();
-    }
+
     private User getOrCreateBot(){
         return userRepository.findByUsername("bot").orElseGet(
                 ()-> userRepository.save(new User("bot","bot@boggle.local","BOT")));

@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 // Run on a random port
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 
-class GameAPITests {
+class GameIntegrationAPITests {
 
     @Autowired
     private UserRepository userRepository;
