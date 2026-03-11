@@ -1,9 +1,5 @@
 package com.example.Boggle.Security;
-
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 import java.security.MessageDigest;
-import java.security.SecureRandom;
 import java.util.Base64;
 
 /**
@@ -32,15 +28,12 @@ public final class PasswordUtil {
         if(password == null || password.isBlank()){
             throw new IllegalArgumentException("Password Required");
         }
-        try{
-            byte[] salt = new byte[SALT_BYTES];
-            RNG.nextBytes(salt);
 
-            byte[] dk = pbkdf2(password.toCharArray(), salt, ITERATIONS, KEY_BITS);
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(password.getBytes());
 
-            return "pbkdf2:" + ITERATIONS + ":" +
-                    Base64.getEncoder().encodeToString(salt) + ":" +
-                    Base64.getEncoder().encodeToString(dk);
+            return Base64.getEncoder().encodeToString(hashBytes);
         } catch (Exception e) {
             throw new RuntimeException("Password hashing failed", e);
         }
@@ -54,21 +47,19 @@ public final class PasswordUtil {
      * @return true if the password matches the stored hash; false otherwise
      */
     public static boolean verify(String password, String stored) {
-        if (password == null || stored == null) return false;
+        if (password == null || stored == null) {
+            return false;
+        }
 
         try {
-            String[] parts = stored.split(":");
-            if (parts.length != 4) return false;
-            if (!"pbkdf2".equals(parts[0])) return false;
+            String hashedInput = hash(password);
 
-            int iterations = Integer.parseInt(parts[1]);
-            byte[] salt = Base64.getDecoder().decode(parts[2]);
-            byte[] expected = Base64.getDecoder().decode(parts[3]);
-
-            byte[] actual = pbkdf2(password.toCharArray(), salt, iterations, expected.length * 8);
-            return MessageDigest.isEqual(actual, expected);
+            return MessageDigest.isEqual(
+                    hashedInput.getBytes(),
+                    stored.getBytes()
+            );
         } catch (Exception e) {
-            return false; // treat parse/crypto errors as "no match"
+            return false;
         }
     }
 
