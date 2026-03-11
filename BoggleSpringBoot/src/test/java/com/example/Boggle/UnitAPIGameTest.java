@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.AssertionsKt.assertNotNull;
 import static org.junit.jupiter.api.AssertionsKt.assertNull;
 import static org.mockito.Mockito.*;
 
-@MockitoBean
 public class UnitAPIGameTest {
 
     private GameRepository gameRepository;
@@ -35,14 +34,19 @@ public class UnitAPIGameTest {
 
 
     @BeforeEach
-    void setup(){
-        gameRepository = mock(gameRepository);
-        boardRepository = mock(boardRepository);
-        userRepository = mock(userRepository);
-        foundWordRepository = mock(foundWordRepository);
-        gameController = new GameController(gameRepository,boardRepository,foundWordRepository,userRepository);
-    }
+    void setup() {
+        gameRepository = mock(GameRepository.class);
+        boardRepository = mock(BoardRepository.class);
+        userRepository = mock(UserRepository.class);
+        foundWordRepository = mock(FoundWordRepository.class);
 
+        gameController = new GameController(
+                gameRepository,
+                boardRepository,
+                foundWordRepository,
+                userRepository
+        );
+    }
 
 
     @Test
@@ -69,7 +73,7 @@ public class UnitAPIGameTest {
         GameController.GameResponse response = gameController.createGame(req);
 
         assertNotNull(response);
-        assertNull(response.player1Id);
+        assertEquals(2, response.player1Id);
         assertNull(response.player2Id);
         assertEquals("board-123", response.boardId);
         assertEquals("IN_PROGRESS", response.status);
@@ -86,7 +90,7 @@ public class UnitAPIGameTest {
         User currentUser = new User("Diego9","diego@test.com","Secret123");
         currentUser.setId(2);
 
-        User userBot = new User("Bot","bot@boggle.local","BOT");
+        User userBot = new User("bot","bot@boggle.local","BOT");
         userBot.setId(3);
 
         Board board = new Board();
@@ -98,7 +102,7 @@ public class UnitAPIGameTest {
         savedGame.setStatus(GameStatus.IN_PROGRESS);
 
         when(userRepository.findById(2)).thenReturn(Optional.of(currentUser));
-        when(userRepository.findByUsername("Bot")).thenReturn(Optional.of(userBot));
+        when(userRepository.findByUsername("bot")).thenReturn(Optional.of(userBot));
         when(boardRepository.save(any(Board.class))).thenReturn(board);
         when(gameRepository.save(any(Game.class))).thenReturn(savedGame);
 
@@ -111,7 +115,7 @@ public class UnitAPIGameTest {
         assertNotNull(response);
         assertEquals(11, response.gameId);
         assertEquals(2, response.player1Id);
-        assertEquals(99, response.player2Id);
+        assertEquals(3, response.player2Id);
         assertEquals("board-bot", response.boardId);
         assertEquals("IN_PROGRESS", response.status);
 
@@ -129,7 +133,7 @@ public class UnitAPIGameTest {
         savedGame.setId(11);
         savedGame.setStatus(GameStatus.WAITING);
 
-        when(userRepository.findById(1)).thenReturn(Optional.of(firstPlayer));
+        when(userRepository.findById(2)).thenReturn(Optional.of(firstPlayer));
         when(gameRepository.save(any(Game.class))).thenReturn(savedGame);
         when(boardRepository.save(any(Board.class))).thenReturn(board);
 
@@ -140,10 +144,11 @@ public class UnitAPIGameTest {
         GameController.GameResponse response = gameController.createGame(req);
 
         assertNotNull(response);
-        assertEquals(12, response.gameId);
+        assertEquals(11, response.gameId);
+        assertEquals("board-Multiplayer", response.boardId);
         assertEquals(2, response.player1Id);
         assertNull(response.player2Id);
-        assertEquals("board-multi", response.boardId);
+        assertEquals("board-Multiplayer", response.boardId);
         assertEquals("WAITING", response.status);
     }
 
@@ -180,7 +185,7 @@ public class UnitAPIGameTest {
         assertEquals(20, response.gameId);
         assertEquals(1, response.player1Id);
         assertEquals(2, response.player2Id);
-        assertEquals("board-join", response.boardId);
+        assertEquals("Board-join", response.boardId);
         assertEquals("IN_PROGRESS", response.status);
 
     }
@@ -223,6 +228,5 @@ public class UnitAPIGameTest {
 
         assertNotNull(response);
         assertEquals("board-2", response.boardId);
-        assertEquals("ABCDEFGHIJKLMNOP", response.boardString);
-    }
+        assertEquals("ABCD\nEFGH\nIJKL\nMNOP", response.boardString);    }
 }
