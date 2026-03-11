@@ -100,7 +100,7 @@ public class WordSubmissionService{
 
         FoundWord wordPassed = new FoundWord();
         wordPassed.setGame(game);   // links word submitted to game it was submitted in (found_words.game_id = game.id)
-        wordPassed.setDictionaryWord(dict); //sets what dictionary word word corresponds to.
+        wordPassed.setDictionaryWord(dict); //sets what dictionary word corresponds to.
         wordPassed.setPlayer(userRepository.getReferenceById(playerId));
 
         //check a word must be greater than or equal to 3
