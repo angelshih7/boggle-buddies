@@ -75,10 +75,29 @@
 .game-main {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 24px;
+  user-select: none; /* prevent text selection while dragging */
 }
+
+/* Current word preview shown above the grid */
+.word-preview {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 800;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  color: #303E77;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  min-height: 2.8rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.word-feedback--ok  { color: #16a34a; }
+.word-feedback--bad { color: #dc2626; }
+.word-feedback--dev { color: #6b7280; font-style: italic; }
 
 /* Boggle grid, always square */
 .boggle-grid {
@@ -107,6 +126,26 @@
 .tile:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 24px rgba(48, 62, 119, 0.2);
+}
+
+/* Selected tile */
+.tile--selected {
+  background: #4a5fc1;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(48, 62, 119, 0.35);
+}
+
+.tile--selected .tile-letter {
+  color: #ffffff;
+}
+
+/* First tile in the current chain – slightly darker to mark the start */
+.tile--first {
+  background: #303E77;
+}
+
+.tile--first .tile-letter {
+  color: #ffffff;
 }
 
 /* Tile letter */

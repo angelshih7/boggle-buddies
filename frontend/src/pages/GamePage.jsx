@@ -1,19 +1,156 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import './GamePage.css';
 
 // Placeholder letters used only during local development when no board
-// is received from the backend. Replace with an API fetch once the
-// board endpoint is available (backend: ShuffleUtil.shuffle_board()).
+// is received from the backend. *Replace with an API fetch once the
+// board endpoint is available (backend: ShuffleUtil.shuffle_board()).*
 const DEV_PLACEHOLDER = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
+const GRID_SIZE = 4;
+const MIN_WORD_LENGTH = 3; // Boggle minimum; also enforced by WordSubmissionService
+
+// --- Adjacency helpers -------------------------------------------------
+
+function tileToRowCol(index) {
+  return { row: Math.floor(index / GRID_SIZE), col: index % GRID_SIZE };
+}
+
+// Two tiles are adjacent if they share an edge or corner on the 4×4 grid.
+function isAdjacent(a, b) {
+  const { row: r1, col: c1 } = tileToRowCol(a);
+  const { row: r2, col: c2 } = tileToRowCol(b);
+  return a !== b && Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1;
+}
+
+// rejection reason returned by WordSubmissionService
+const REASON_LABEL = {
+  TOO_SHORT:         'too short (min 3 letters)',
+  NOT_IN_DICTIONARY: 'not a word',
+  NOT_ON_BOARD:      'not on board',
+  DUPLICATE:         'already found',
+  OK:                '✓',
+  DEV_MODE:          '',
+  ERROR:             'network error',
+};
+
+// -----------------------------------------------------------------------
 
 export default function GamePage() {
-  const location = useLocation();
+  const location   = useLocation();
   const playerName = location.state?.playerName ?? 'Guest';
-  const score      = location.state?.score      ?? 0;
+  // gameId / playerId are needed to call WordSubmissionService via the REST API.
+  // POST /api/game/{gameId}/word must be wired to WordSubmissionService
+  // in GameController (the old submitWord endpoint was removed).
+  const gameId     = location.state?.gameId   ?? null;
+  const playerId   = location.state?.playerId ?? null;
+  const letters    = location.state?.letters  ?? DEV_PLACEHOLDER;
 
-  // Board letters come from the backend (via navigation state or future API call).
-  // Expected shape: flat array of 16 strings, e.g. ["A","T","Qu","R", ...]
-  const letters = location.state?.letters ?? DEV_PLACEHOLDER;
+  const [score, setScore]           = useState(location.state?.score ?? 0);
+  const [selectedPath, setSelectedPath] = useState([]); // tile indices in selection order
+  const [feedback, setFeedback]         = useState(null); 
+
+  // Refs keep event-handler callbacks stable without re-registering listeners.
+  const isDraggingRef = useRef(false);
+  const pathRef       = useRef([]);     // mirrors selectedPath, always current
+  const lettersRef    = useRef(letters);
+  lettersRef.current  = letters;
+
+  // Update render state and the ref together.
+  const updatePath = (newPath) => {
+    pathRef.current = newPath;
+    setSelectedPath([...newPath]);
+  };
+
+  // ---- Drag logic -------------------------------------------------------
+
+  // Called when the pointer enters a tile while dragging.
+  const enterTile = useCallback((index) => {
+    if (!isDraggingRef.current || index < 0) return;
+
+    const path = pathRef.current;
+    const existingIdx = path.indexOf(index);
+
+    if (existingIdx !== -1) {
+      // Cursor returned to a tile already in the chain → undo back to it.
+      updatePath(path.slice(0, existingIdx + 1));
+      return;
+    }
+
+    // Extend chain only if the new tile neighbours the last selected tile.
+    if (isAdjacent(path[path.length - 1], index)) {
+      updatePath([...path, index]);
+    }
+  }, []); // no captured state – reads refs only
+
+  // Called when the pointer presses down on a tile to begin selection.
+  const startDrag = useCallback((index) => {
+    isDraggingRef.current = true;
+    setFeedback(null);
+    updatePath([index]);
+  }, []);
+
+  // ---- Word submission (delegates to backend) ---------------------------
+
+  // WordSubmissionService handles: dictionary lookup, board-path validation,
+  // duplicate detection, min-length check, and scoring.
+  const submitWord = useCallback(async (word) => {
+    // backend enforces the real rule.
+    if (word.length < MIN_WORD_LENGTH) {
+      setFeedback({ word, accepted: false, reason: 'TOO_SHORT' });
+      return;
+    }
+
+    if (gameId != null && playerId != null) {
+      try {
+        // Calls WordSubmissionService.submitWord(gameId, playerId, rawWord)
+        // via GameController 
+        // endpoint must be uncommented / re-wired there.
+        const res = await fetch(`/api/game/${gameId}/word`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playerId, word }),
+        });
+        const data = await res.json();
+        setFeedback({ word, accepted: data.accepted, reason: data.reason });
+        if (data.accepted && data.points) {
+          setScore(s => s + data.points);
+        }
+      } catch {
+        setFeedback({ word, accepted: false, reason: 'ERROR' });
+      }
+    } else {
+      // No active game session (dev / standalone preview).
+      setFeedback({ word, accepted: null, reason: 'DEV_MODE' });
+    }
+  }, [gameId, playerId]);
+
+  // ---- Finalize on pointer release -------------------------------------
+
+  const finalize = useCallback(() => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+
+    const word = pathRef.current.map(i => lettersRef.current[i]).join('');
+    updatePath([]); // clear highlight immediately
+    submitWord(word);
+  }, [submitWord]);
+
+  // Global mouseup so releasing outside the grid still finalizes the word.
+  useEffect(() => {
+    window.addEventListener('mouseup', finalize);
+    return () => window.removeEventListener('mouseup', finalize);
+  }, [finalize]);
+
+  // ---- Render -----------------------------------------------------------
+
+  const currentWord = selectedPath.map(i => letters[i]).join('');
+
+  let feedbackMod = '';
+  if (feedback) {
+    feedbackMod = feedback.accepted === true  ? 'ok'
+                : feedback.accepted === false ? 'bad'
+                : 'dev';
+  }
 
   return (
     <div className="game-page">
@@ -29,14 +166,46 @@ export default function GamePage() {
       </aside>
 
       <main className="game-main">
+        {/* Live word preview / last-word feedback */}
+        <div className="word-preview">
+          {currentWord
+            ? currentWord
+            : feedback
+              ? (
+                <span className={`word-feedback word-feedback--${feedbackMod}`}>
+                  {feedback.word}
+                  {feedback.reason in REASON_LABEL && feedback.reason !== 'DEV_MODE'
+                    ? ` — ${REASON_LABEL[feedback.reason]}`
+                    : ''}
+                </span>
+              )
+              : '\u00A0' /* keep height stable */}
+        </div>
+
         <div className="boggle-grid">
-          {letters.map((letter, i) => (
-            <div key={i} className="tile">
-              <span className={`tile-letter${letter === 'Qu' ? ' tile-letter--qu' : ''}`}>
-                {letter}
-              </span>
-            </div>
-          ))}
+          {letters.map((letter, i) => {
+            const isSelected = selectedPath.includes(i);
+            const isFirst    = selectedPath[0] === i;
+            const classes    = [
+              'tile',
+              isSelected ? 'tile--selected' : '',
+              isFirst    ? 'tile--first'    : '',
+            ].filter(Boolean).join(' ');
+
+            return (
+              <div
+                key={i}
+                data-tile-index={i}
+                className={classes}
+                onMouseDown={() => startDrag(i)}
+                onMouseEnter={() => enterTile(i)}
+              >
+                <span className={`tile-letter${letter === 'Qu' ? ' tile-letter--qu' : ''}`}>
+                  {letter}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </main>
     </div>
