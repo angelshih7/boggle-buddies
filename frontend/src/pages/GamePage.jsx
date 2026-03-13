@@ -52,8 +52,10 @@ export default function GamePage() {
   // Refs keep event-handler callbacks stable without re-registering listeners.
   const isDraggingRef = useRef(false);
   const pathRef       = useRef([]);     // mirrors selectedPath, always current
-  const lettersRef    = useRef(letters);
-  lettersRef.current  = letters;
+  const lettersRef = useRef(letters);
+  useEffect(() => {
+    lettersRef.current = letters;
+  }, [letters]);
 
   // Update render state and the ref together.
   const updatePath = (newPath) => {
