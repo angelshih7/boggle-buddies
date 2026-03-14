@@ -35,6 +35,8 @@ class GameScoreServiceTest {
         Game game = new Game();
         game.setPlayer1(player1);
         game.setPlayer2(player2);
+        game.setStatus(GameStatus.IN_PROGRESS);
+
 
         setPrivateId(player1, 1);
         setPrivateId(player2, 2);
@@ -46,6 +48,8 @@ class GameScoreServiceTest {
 
         GameScoreService.Totals totals = gameScoreService.computeTotals(10);
 
+        assertEquals(10, totals.gameId);
+        assertEquals("IN_PROGRESS", totals.status);
         assertEquals(1, totals.player1Id);
         assertEquals(2, totals.player2Id);
         assertEquals(8, totals.player1Points);
@@ -60,6 +64,8 @@ class GameScoreServiceTest {
         Game game = new Game();
         game.setPlayer1(player1);
         game.setPlayer2(player2);
+        game.setStatus(GameStatus.IN_PROGRESS);
+
 
         setPrivateId(player1, 1);
         setPrivateId(player2, 2);

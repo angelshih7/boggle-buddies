@@ -176,7 +176,7 @@ public class WordSubmissionService{
         //duplicate check
         if(foundWordRepository.existsByGame_IdAndPlayer_IdAndDictionaryWord_Id(gameId,playerId,dict.getId())){
             out.accepted = false;
-            out.reason = SubmissionReason.TOO_SHORT;
+            out.reason = SubmissionReason.DUPLICATE;
             return out;
         }
 
