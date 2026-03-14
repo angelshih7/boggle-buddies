@@ -288,8 +288,9 @@ public class GameController{
     /**
      * Retrieves a summary of the board related to the gameID passed.
      *
-     * @param gameId
-     * @return
+     * @param gameId the game ID
+     * @return the board information for the specified game
+     * @throws ResponseStatusException if the game does not exist.
      */
     @GetMapping("/game/{gameId}/board")
     public BoardResponse getBoard(@PathVariable Integer gameId){
@@ -298,12 +299,21 @@ public class GameController{
         return BoardResponse.BoardDTO(gameBoardSelect.getBoard());
     }
 
+    /**
+     * Generates and returns a sample board without creating a game.
+     *
+     * @return a newly generated board response
+     */
     @PostMapping("/game/board")
     public BoardResponse getBoardSample(){
         Board boardSample = createAndSaveBoard();
         return BoardResponse.BoardDTO(boardSample);    }
 
-    //=====Helper Methods======/
+    /**
+     * Generates, assign an ID to and saves a new board.
+     *
+     * @return the saved board entity
+     */
     private Board createAndSaveBoard(){
         String flattened  = ShuffleUtil.shuffle_board().flattened;
         Board newBoard = new Board();
@@ -313,10 +323,23 @@ public class GameController{
     }
 
 
+    /**
+     * Retrieves the bot user, creating it if it does not already exist.
+     * @return the bot user entity
+     */
     private User getOrCreateBot(){
         return userRepository.findByUsername("bot").orElseGet(
                 ()-> userRepository.save(new User("bot","bot@boggle.local","BOT")));
     }
+
+    /**
+     * Resolves a user ID into a user entity.
+     *
+     * @param userId the user ID to resolve
+     * @param fieldName the request field name used in error messages
+     * @return the matching user
+     * @throws ResponseStatusException if the ID is null or the user does not exist
+     */
     private User requireUser(Integer userId, String fieldName){
         if(userId==null){
             throw new ResponseStatusException(BAD_REQUEST,fieldName + " is required");

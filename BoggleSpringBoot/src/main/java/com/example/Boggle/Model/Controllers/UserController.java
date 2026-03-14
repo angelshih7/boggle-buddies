@@ -15,7 +15,10 @@ import java.util.UUID;
 import static org.springframework.http.HttpStatus.*;
 
 /**
+ * REST controller for user registration, login, and guest account creation.
  *
+ * <p>This controller supports creating registered users, authenticating
+ * existing non-guest users, and generating guest accounts for temporary play.
  */
 @RestController
 @RequestMapping("/api/users")
@@ -24,37 +27,85 @@ public class UserController {
     private static final SecureRandom rng = new SecureRandom();
 
     /**
+     * Creates a controller with access to user persistence.
      *
-     * @param userRepository
+     * @param userRepository repository for user records
      */
     public UserController(UserRepository userRepository){
         this.userRepository = userRepository;
     }
 
-    //Data transfer objects
 
     /**
-     *
+     * Request body for registering a new user account.
      */
     public static class RegisterRequest{
+        /**
+         * The request username.
+         */
         public String username;
+        /**
+         * The user's email address
+         */
         public String email;
+        /**
+         * The user's plain-text password.
+         */
         public String password;
     }
 
+    /**
+     * Request body for login/authenticating an existing user.
+     */
     public static class LoginRequest{
+        /**
+         * The username used for login.
+         */
         public String username;
+        /**
+         * The plain-text password used for login.
+         */
         public String password;
     }
 
+    /**
+     * Optional request body for creating a guest account.
+     *
+     * <p>If a username is provided, the controller attempts to use it as the
+     * base guest name; otherwise a generated guest name is used.
+     */
     public static class GuestRequest{
+        /**
+         * Optional preferred guest username.
+         */
         public String username;
     }
 
+    /**
+     * Response body representing a user returned by the API.
+     */
     public static class UserResponse{
+        /**
+         * The user ID.
+         */
         public Integer id;
+
+        /**
+         * The username
+         */
         public String username;
+
+        /**
+         * The email address.
+         */
         public String email;
+
+        /**
+         * Builds a response DTO from a user entity
+         *
+         * @param u the user entity
+         * @return a response containing public user data
+         */
         public static UserResponse userDTO(User u){
             UserResponse out = new UserResponse();
             out.id = u.getId();
@@ -65,7 +116,14 @@ public class UserController {
         }
     }
 
-    //----Endpoint for user creation
+    /**
+     * Registers a new (non-guest) user account
+     *
+     * @param req the registration request.
+     * @return the created user response.
+     * @throws ResponseStatusException if required fields are missing or the
+     *                                 username or email is laready in use
+     */
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/register")
     public UserResponse register (@RequestBody RegisterRequest req) {
@@ -92,6 +150,15 @@ public class UserController {
             throw new ResponseStatusException(CONFLICT, "Username or email already taken");
         }
     }
+
+    /**
+     * Authenticates an existing user.
+     *
+     * @param req the login request
+     * @return the login user response
+     * @throws ResponseStatusException if the request is invalid or the credentials
+     *                                 do not match
+     */
     @PostMapping("/login")
     public UserResponse login(@RequestBody LoginRequest req) {
         if (req == null) throw new ResponseStatusException(BAD_REQUEST, "Body is required");
@@ -113,6 +180,16 @@ public class UserController {
         return UserResponse.userDTO(u);
     }
 
+    /**
+     * Create a guest user account
+     *
+     * <p>If a preferred username is provided, the controller attempts to make
+     * it unique. Otherwise, a generated guest username is used.
+     *
+     * @param req the optional guest creation request
+     *             (custom username or auto-generated)
+     * @return the created guest user response
+     */
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/guest")
     public UserResponse guest(@RequestBody(required = false) GuestRequest req) {
@@ -142,8 +219,14 @@ public class UserController {
         }
     }
 
-    //-----helper methods
-
+    /**
+     * Validates that a required string field is present and non-blank.
+     *
+     * @param value the input value
+     * @param field the field name for error messages
+     * @return the trimmed value
+     * @throws ResponseStatusException if the value is null or blank
+     */
     private String require(String value, String field) {
         if (value == null || value.isBlank()) {
             throw new ResponseStatusException(BAD_REQUEST, field + " is required");
@@ -151,9 +234,21 @@ public class UserController {
         return value.trim();
     }
 
+    /**
+     * Returns a non-null version of the provided string.
+     *
+     * @param s the input string
+     * @return the original string, or an empty string if null
+     */
     private String safe(String s) { return s == null ? "" : s; }
 
 
+    /**
+     * Generates a unique username based on the provided base value.
+     *
+     * @param base the desired base username
+     * @return a username that does not currently exist in the repository
+     */
     private String makeUniqueUsername(String base) {
         String candidate = base;
         int tries = 0;
@@ -166,11 +261,17 @@ public class UserController {
     }
 
     /**
+     * Generates a default guest username.
      *
-     * @return
+     * @return a guest username with a short random suffix
      */
     private String generateGuestUsername() { return "Guest-" + shortToken(); }
 
+    /**
+     * Generates a short random URL-safe token.
+     *
+     * @return a short random token string
+     */
     private String shortToken() {
         byte[] b = new byte[3];
         rng.nextBytes(b);
