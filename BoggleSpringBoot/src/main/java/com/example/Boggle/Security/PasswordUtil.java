@@ -12,10 +12,6 @@ public final class PasswordUtil {
     //prevents instantiation.
     private PasswordUtil() {}
 
-    private static final int SALT_BYTES = 16;
-    private static final int ITERATIONS = 120_000;
-    private static final int KEY_BITS = 256;
-
     /**
      * Hashes a plain-text password using PBKDF2 with a random salt.
      *

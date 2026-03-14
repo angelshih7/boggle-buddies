@@ -15,7 +15,15 @@ public class ShuffleUtil extends BoggleBag {
         }
     }
 
-    public static GeneratedBoard shuffle_board() {
+
+    /**
+     * Generates a random 4x4 Boggle board using letters selected from the
+     * weighted letter bag.
+     *
+     * @return a {@link GeneratedBoard} containing both the 2D grid and its
+     *         flattened string form
+     */
+    public static GeneratedBoard shuffledBoard() {
         String[][] board = new String[4][4];
         for (int i = 0; i < 16; i++) {
             String character = BoggleBag.getBag().get(shuffle.nextInt(getBag().size()));

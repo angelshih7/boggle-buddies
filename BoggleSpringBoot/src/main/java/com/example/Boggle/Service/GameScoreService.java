@@ -1,19 +1,27 @@
 package com.example.Boggle.Service;
 
 
+import com.example.Boggle.Model.Controllers.GameController;
 import com.example.Boggle.Model.Tables.Game;
 import com.example.Boggle.Model.Tables.GameStatus;
 import com.example.Boggle.repository.FoundWordRepository;
 import com.example.Boggle.repository.GameRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.RejectedExecutionException;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
  * Service responsible for computing player scores and determining the winner
  * of a game based on the point values of words found during play.
  * Class has 2 functions
+ *
+ *  * Is called by {@link GameController} class;
+ *
  * 1. Compute the current score totals while the game is in progress.
  * 2. Finalize the game and record the winner.
  */
@@ -24,6 +32,8 @@ public class GameScoreService {
      * Holds the score totals for each player and the ID of the winning player.
      */
     public static class Totals{
+        public Integer gameId;
+        public String status;
         public Integer player1Id;
         public Integer player2Id;
         public int player1Points;
@@ -35,8 +45,10 @@ public class GameScoreService {
     private final FoundWordRepository foundWordRepository;
 
     /**
-     * Constructs a GameScoreService with the repositories needed
-     * to load games and calculate player scores.
+     *  Constructs a GameScoreService with the repositories needed
+     *  to load games and calculate player scores.
+     * @param gameRepository Repository that stores the game information
+     * @param foundWordRepository Repository that stores the user words found during game.
      */
     public GameScoreService(GameRepository gameRepository,
                               FoundWordRepository foundWordRepository){
@@ -52,7 +64,8 @@ public class GameScoreService {
      */
     @Transactional()
     public Totals computeTotals(Integer gameId){
-        Game game = gameRepository.findById(gameId).orElseThrow();
+        Game game = gameRepository.findById(gameId).orElseThrow(
+                () -> new ResponseStatusException(NOT_FOUND,"Game not found"));
         Integer p1Id = game.getPlayer1().getId();
         Integer p2Id = (game.getPlayer2()==null)? null: game.getPlayer2().getId();
 
@@ -61,6 +74,8 @@ public class GameScoreService {
         Integer p2Pts = (p2Id==null)? null: foundWordRepository.totalPointsForPlayer(gameId,p2Id);
 
         Totals totalOut = new Totals();
+        totalOut.gameId = game.getId();
+        totalOut.status = game.getStatus().name();
         totalOut.player1Id = p1Id;
         totalOut.player2Id = p2Id;
         totalOut.player1Points = p1Pts;
@@ -87,7 +102,9 @@ public class GameScoreService {
      */
     @Transactional
     public Totals finishGame(Integer gameId) {
-        Game game = gameRepository.findById(gameId).orElseThrow();
+        Game game = gameRepository.findById(gameId).orElseThrow(
+                ()-> new ResponseStatusException(NOT_FOUND,"Game not found")
+        );
         Totals totals = computeTotals(gameId);
 
         game.setStatus(GameStatus.FINISHED);
@@ -102,6 +119,7 @@ public class GameScoreService {
         }
 
         gameRepository.save(game);
+        totals.status =  GameStatus.FINISHED.name();
         return totals;
     }
 

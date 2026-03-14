@@ -3,6 +3,10 @@ import com.example.Boggle.Model.Tables.Board;
 import com.example.Boggle.Model.Tables.Game;
 import com.example.Boggle.Model.Tables.GameStatus;
 import com.example.Boggle.Model.Tables.User;
+import com.example.Boggle.Service.GameScoreService;
+import com.example.Boggle.Service.GameService;
+import com.example.Boggle.Service.WordSubmissionService;
+import com.example.Boggle.Session.SubmitWordRequest;
 import com.example.Boggle.repository.BoardRepository;
 import com.example.Boggle.repository.FoundWordRepository;
 import com.example.Boggle.repository.GameRepository;
@@ -26,21 +30,27 @@ It manages every request to the backend by frontend in relation to the table.
 @RequestMapping("/api")
 public class GameController{
 
-    //hold value of the repository created
-    private final GameRepository gameRepository;
-    private final BoardRepository boardRepository;
-    private final FoundWordRepository foundWordRepository;
-    private final UserRepository userRepository;
 
-    //initialize repositories
-    public GameController(GameRepository gameRepository,
-                          BoardRepository boardRepository,
-                          FoundWordRepository foundWordRepository,
-                          UserRepository userRepository){
-        this.gameRepository = gameRepository;
-        this.boardRepository = boardRepository;
-        this.foundWordRepository = foundWordRepository;
-        this.userRepository = userRepository;
+    private final GameService gameService;
+    private final GameScoreService gameScoreService;
+    private final WordSubmissionService wordSubmissionService;
+
+    /**
+     * Creates a controller with the repositories required to manage games
+     * and boards.
+     *
+     * Related classes to check out {@link GameService} {@link GameScoreService} {@link WordSubmissionService}
+     *
+     * @param gameService Service that handles game logic
+     * @param gameScoreService Service that handles score tracking
+     * @param wordSubmissionService Service that handles word submission validation
+     */
+    public GameController(GameService gameService,
+                          GameScoreService gameScoreService,
+                          WordSubmissionService wordSubmissionService){
+       this.gameService = gameService;
+       this.gameScoreService = gameScoreService;
+       this. wordSubmissionService = wordSubmissionService;
     }
 
     public enum GameMode {SOLO, BOT, MULTIPLAYER}
@@ -54,13 +64,33 @@ public class GameController{
         public Integer playerId;
     }
 
-    // format for a json response to send to frontend
+    /**
+     *
+     */
+    public static class SubmitWordRequest {
+        public Integer playerId;
+        public String word;
+    }
+
+    /**
+     * Response body summarizing a game.
+     */
     public static class GameResponse{
         public Integer gameId;
         public Integer player1Id;
         public Integer player2Id;
         public String boardId;
         public String status;
+        public LocalDateTime createdAt;
+        public LocalDateTime startedAt;
+        public LocalDateTime finishedAt;
+
+        /**
+         * Builds a response DTO from a game entity.
+         *
+         * @param currentGame the game entity to summarize
+         * @return a response containing key game details
+         */
         public static GameResponse GameSummaryDTO(Game currentGame){
             GameResponse gameSummary = new GameResponse();
             gameSummary.gameId = currentGame.getId();
@@ -68,152 +98,140 @@ public class GameController{
             gameSummary.player2Id = (currentGame.getPlayer2() == null) ? null : currentGame.getPlayer2().getId();
             gameSummary.boardId = currentGame.getBoard().getBoardId();
             gameSummary.status = currentGame.getStatus().name();
+            gameSummary.createdAt = currentGame.getCreatedAt();
+            gameSummary.startedAt = currentGame.getStartedAt();
+            gameSummary.finishedAt = currentGame.getFinishedAt();
             return gameSummary;
         }
     }
 
     public static class BoardResponse{
+
         public String boardId;
         public String boardString;
-        public BoardResponse(String boardId, String boardString ){
-            this.boardId = boardId;
-            this.boardString = boardString;
-        }
+
+        /**
+         * Builds a response DTO from a board entity.
+         *
+         * @param currentBoard the board entity
+         * @return a response containing board details
+         */
         public static BoardResponse BoardDTO(Board currentBoard){
-            return new BoardResponse(currentBoard.getBoardId(), currentBoard.getBoardString());
+            BoardResponse boardOut = new BoardResponse();
+            boardOut.boardId = currentBoard.getBoardId();
+            boardOut.boardString = currentBoard.getBoardString();
+            return boardOut;
         }
     }
 
-    /* Needs refactoring. Session class removed.
-    // New endpoint: submit a word, reject duplicates per (gameCode, username)
-    @PostMapping("/game/submitWord")
-    public SubmitWordResponse submitWord(@RequestBody SubmitWordRequest request) {
-        if (request.getSessionCode() == null || request.getUsername() == null || request.getWord() == null) {
-            return new SubmitWordResponse(false, "INVALID");
-        }
+    public static class SubmitWordResponse{
+        public boolean accepted;
+        public String reason;
+        public String normalizedWord;
+        public Integer points;
 
-        try {
-            Session session = findSession(request.getSessionCode());
-
-            // Optional: auto-add user if they somehow submit before joining
-            session.addUser(request.getUsername());
-
-            boolean accepted = session.recordWord(request.getUsername(), request.getWord());
-            if (!accepted) {
-                return new SubmitWordResponse(false, "DUPLICATE");
-            }
-            return new SubmitWordResponse(true, "OK");
-
-        } catch (NoSuchElementException e) {
-            return new SubmitWordResponse(false, "INVALID");
+        public static SubmitWordResponse SubmitWordDTO(WordSubmissionService.Result result){
+            SubmitWordResponse submitWordResult = new SubmitWordResponse();
+            submitWordResult.accepted = result.accepted;
+            submitWordResult.reason = result.reason.name();
+            submitWordResult.normalizedWord = result.normalizedWord;
+            submitWordResult.points = result.points;
+            return submitWordResult;
         }
     }
-    */
 
     //=====Solo /Bot game =======/
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/game")
     public GameResponse createGame(@RequestBody CreateGameRequest request){
-        if(request == null || request.mode == null){
-            throw new ResponseStatusException(BAD_REQUEST,"Body is required");
+        if(request == null){
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Body is required");
+        }
+        if(request.playerId == null){
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "playerId is required");
+        }
+        if(request.mode == null){
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Mode is required");
         }
 
-        User p1 = requireUser(request.playerId, "playerId");
-        Game game;
-
-        switch (request.mode) {
-            case SOLO ->{
-                game = new Game(p1,null,createAndSaveBoard());
-
-            }
-            case BOT -> {
-                game = new Game(p1,getOrCreateBot(),createAndSaveBoard());
-            }
-            case MULTIPLAYER -> game = new Game(p1, null, createAndSaveBoard());
-
-            default -> throw new ResponseStatusException(BAD_REQUEST, "Unknown mode");
-        }
-
-        if(request.mode ==GameMode.MULTIPLAYER){
-            game.setStatus(GameStatus.WAITING);
-        }else{
-            game.setStatus(GameStatus.IN_PROGRESS);
-            game.setStartedAt(LocalDateTime.now());
-        }
-
-    return GameResponse.GameSummaryDTO(gameRepository.save(game));
+        Game game = gameService.createGame(request.mode,request.playerId);
+        return GameResponse.GameSummaryDTO(game);
     }
 
 
     @PostMapping("/game/{gameId}/join")
     public GameResponse joinGame(@PathVariable Integer gameId, @RequestBody JoinGameRequest request){
         if (request == null) {
-            throw new ResponseStatusException(BAD_REQUEST, "Body is required");
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Body is required");
+        }
+        if (request.playerId == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "playerId is required");
         }
 
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game id not found"));
-
-        User player2 = requireUser(request.playerId, "playerId");
-
-        if (game.getStatus() != GameStatus.WAITING) {
-            throw new ResponseStatusException(CONFLICT, "Game is not joinable");
-        }
-
-        if (game.getPlayer2() != null) {
-            throw new ResponseStatusException(CONFLICT, "Game already full");
-        }
-
-        if (game.getPlayer1().getId().equals(player2.getId())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Player cannot join own game");
-        }
-
-        game.setPlayer2(player2);
-        game.setStatus(GameStatus.IN_PROGRESS);
-        game.setStartedAt(LocalDateTime.now());
-
-        return GameResponse.GameSummaryDTO(gameRepository.save(game));
+        Game game = gameService.joinGame(gameId, request.playerId);
+        return GameResponse.GameSummaryDTO(game);
     }
 
     @GetMapping("/game/{gameId}")
     public GameResponse getGame(@PathVariable Integer gameId){
-        Game gameSelected = gameRepository.findById(gameId)
-                .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"Game id not found."));
-        return GameResponse.GameSummaryDTO(gameSelected);
+        return GameResponse.GameSummaryDTO(gameService.getGame(gameId));
     }
 
     @GetMapping("/game/{gameId}/board")
     public BoardResponse getBoard(@PathVariable Integer gameId){
-        Game gameBoardSelect = gameRepository.findById(gameId)
-                .orElseThrow(()-> new ResponseStatusException(NOT_FOUND,"Board related to game not found"));
-        return BoardResponse.BoardDTO(gameBoardSelect.getBoard());
+        return BoardResponse.BoardDTO(gameService.getBoard(gameId));
     }
 
-    @PostMapping("/game/board")
-    public BoardResponse getBoardSample(){
-        Board boardSample = createAndSaveBoard();
-        return BoardResponse.BoardDTO(boardSample);    }
-
-    //=====Helper Methods======/
-    private Board createAndSaveBoard(){
-        String flattened  = ShuffleUtil.shuffle_board().flattened;
-        Board newBoard = new Board();
-        newBoard.setBoardId(UUID.randomUUID().toString());
-        newBoard.setBoardString(flattened);
-        return boardRepository.save(newBoard);
-    }
-
-
-    private User getOrCreateBot(){
-        return userRepository.findByUsername("bot").orElseGet(
-                ()-> userRepository.save(new User("bot","bot@boggle.local","BOT")));
-    }
-    private User requireUser(Integer userId, String fieldName){
-        if(userId==null){
-            throw new ResponseStatusException(BAD_REQUEST,fieldName + " is required");
+    /**
+     * Retrieves a summary of the Submit
+     *
+     * @param gameId
+     * @param request
+     * @return
+     */
+    @PostMapping("/game/{gameId}/submit-word")
+    public SubmitWordResponse submitWord(@PathVariable Integer gameId,
+                                         @RequestBody SubmitWordRequest request){
+        if(request == null){
+            throw new org.springframework.web.server.ResponseStatusException(
+                    BAD_REQUEST,"playerId is required");
         }
-        return userRepository.findById(userId).orElseThrow(
-                ()-> new ResponseStatusException(NOT_FOUND, fieldName + " not found")
-        );
+        if (request.playerId == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "playerId is required");
+        }
+        if (request.word == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "word is required");
+        }
+        WordSubmissionService.Result result =
+                wordSubmissionService.submitWord(gameId, request.playerId, request.word);
+
+        return SubmitWordResponse.SubmitWordDTO(result);
+    }
+
+    /**
+     *
+     * @param gameId
+     * @return
+     */
+    @GetMapping("/game/{gameId}/score")
+    public GameScoreService.Totals getScore(@PathVariable Integer gameId){
+        return gameScoreService.computeTotals(gameId);
+    }
+
+    /**
+     *
+     * @param gameId
+     * @return
+     */
+    @PostMapping("/game/{gameId}/finish")
+    public GameScoreService.Totals finishGame(@PathVariable Integer gameId){
+        return gameScoreService.finishGame(gameId);
     }
 }
