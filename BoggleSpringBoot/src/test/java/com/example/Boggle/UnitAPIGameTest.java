@@ -24,6 +24,12 @@ import static org.junit.jupiter.api.AssertionsKt.assertNotNull;
 import static org.junit.jupiter.api.AssertionsKt.assertNull;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit test for {@link GameController}
+ *
+ * These test verify game creation, multiplayer joining,
+ * and board retrieval behavior using mocked repositories.
+ */
 public class UnitAPIGameTest {
 
     private GameRepository gameRepository;
@@ -32,7 +38,10 @@ public class UnitAPIGameTest {
     private FoundWordRepository foundWordRepository;
     private GameController gameController;
 
-
+    /**
+     * Initializes mocked repositories and creates a controller instance
+     * before each test runs.
+     */
     @BeforeEach
     void setup() {
         gameRepository = mock(GameRepository.class);
@@ -48,7 +57,10 @@ public class UnitAPIGameTest {
         );
     }
 
-
+    /**
+     * Verifies that creating a solo player game
+     * return the correct game response (board, player) and in-progress status
+     */
     @Test
     void TestCreateGameSolo() {
         User currentUser = new User("Diego9", "diego@test.com", "Secret123");
@@ -85,6 +97,10 @@ public class UnitAPIGameTest {
 
     }
 
+    /**
+     * Verifies that creating a bot game assigns the bot as the 2nd player
+     * and returns the correct game response
+     */
     @Test
     void TestCreateGameBot(){
         User currentUser = new User("Diego9","diego@test.com","Secret123");
@@ -120,6 +136,11 @@ public class UnitAPIGameTest {
         assertEquals("IN_PROGRESS", response.status);
 
     }
+
+    /**
+     * Verifies that creating a multiplayer game places the game
+     * in waiting status until another player joins.
+     */
     @Test
     void TestCreateGameMultiplayer(){
         User firstPlayer = new User("Diego9","diego@test.com","Secret123");
@@ -152,6 +173,10 @@ public class UnitAPIGameTest {
         assertEquals("WAITING", response.status);
     }
 
+    /**
+     * Verifies that a second player can successfully join an
+     * existing waiting multiplayer game.
+     */
     @Test
     void testJoinGameSuccess(){
         User firstPlayer = new User("Diego9","diego@test.com","Secret123");
@@ -190,6 +215,10 @@ public class UnitAPIGameTest {
 
     }
 
+    /**
+     * Verifies that joining a game with a null request body
+     * throws a bad request exception.
+     */
     @Test
     void testJoinGameNullBody() {
         ResponseStatusException ex =
@@ -198,6 +227,10 @@ public class UnitAPIGameTest {
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
     }
 
+    /**
+     * Verifies that attempting to join a non-existent game
+     * throws a not found exception.
+     */
     @Test
     void testJoinGameNotFound(){
         when(gameRepository.findById(50)).thenReturn(Optional.empty());
@@ -210,6 +243,11 @@ public class UnitAPIGameTest {
 
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }
+
+    /**
+     * Verifies that retrieving a board for an existing game
+     * returns the expected board identifier and board contents.
+     */
     @Test
     void testGetBoard_success() {
         User player1 = new User("Diego9", "diego@test.com", "Secret123");
