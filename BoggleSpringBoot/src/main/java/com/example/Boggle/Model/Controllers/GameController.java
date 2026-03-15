@@ -157,17 +157,6 @@ public class GameController{
         public String boardString;
 
         /**
-         * Creates a board response.
-         *
-         * @param boardId the public board identifier
-         * @param boardString the flattened board contents
-         */
-        public BoardResponse(String boardId, String boardString ){
-            this.boardId = boardId;
-            this.boardString = boardString;
-        }
-
-        /**
          * Builds a response DTO from a board entity.
          *
          * @param currentBoard the board entity
