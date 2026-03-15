@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import './GamePage.css';
 
-// Placeholder letters used only during local development when no board
-// is received from the backend. *Replace with an API fetch once the
-// board endpoint is available (backend: ShuffleUtil.shuffle_board()).*
+/**
+ * Placeholder letters used only during local development when no board
+ * is received from the backend. Shown while the board fetch is in flight
+ * or when gameId is absent (standalone preview).
+ */
 const DEV_PLACEHOLDER = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
 const GRID_SIZE = 4;
 const MIN_WORD_LENGTH = 3; // Boggle minimum; also enforced by WordSubmissionService
@@ -15,14 +17,20 @@ function tileToRowCol(index) {
   return { row: Math.floor(index / GRID_SIZE), col: index % GRID_SIZE };
 }
 
-// Two tiles are adjacent if they share an edge or corner on the 4×4 grid.
+/**
+ * Two tiles are adjacent if they share an edge or corner on the 4×4 grid.
+ *
+ * @param {number} a
+ * @param {number} b
+ * @returns {boolean}
+ */
 function isAdjacent(a, b) {
   const { row: r1, col: c1 } = tileToRowCol(a);
   const { row: r2, col: c2 } = tileToRowCol(b);
   return a !== b && Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1;
 }
 
-// rejection reason returned by WordSubmissionService
+/** rejection reason returned by WordSubmissionService */
 const REASON_LABEL = {
   TOO_SHORT:         'too short (min 3 letters)',
   NOT_IN_DICTIONARY: 'not a word',
@@ -38,24 +46,33 @@ const REASON_LABEL = {
 export default function GamePage() {
   const location   = useLocation();
   const playerName = location.state?.playerName ?? 'Guest';
-  // gameId / playerId are needed to call WordSubmissionService via the REST API.
-  // POST /api/game/{gameId}/word must be wired to WordSubmissionService
-  // in GameController (the old submitWord endpoint was removed).
+  /**
+   * gameId / playerId are needed to call WordSubmissionService via the REST API.
+   * POST /api/game/{gameId}/word must be wired to WordSubmissionService
+   * in GameController (the old submitWord endpoint was removed).
+   */
   const gameId     = location.state?.gameId   ?? null;
   const playerId   = location.state?.playerId ?? null;
-  const letters    = location.state?.letters  ?? DEV_PLACEHOLDER;
 
-  const [score, setScore]           = useState(location.state?.score ?? 0);
+  const [letters, setLetters]           = useState(location.state?.letters ?? DEV_PLACEHOLDER);
+  const [boardLoading, setBoardLoading] = useState(gameId != null);
+  const [score, setScore]               = useState(location.state?.score ?? 0);
   const [selectedPath, setSelectedPath] = useState([]); // tile indices in selection order
-  const [feedback, setFeedback]         = useState(null); 
+  const [feedback, setFeedback]         = useState(null);
 
   // Refs keep event-handler callbacks stable without re-registering listeners.
   const isDraggingRef = useRef(false);
   const pathRef       = useRef([]);     // mirrors selectedPath, always current
-  const lettersRef    = useRef(letters);
-  lettersRef.current  = letters;
+  const lettersRef = useRef(letters);
+  useEffect(() => {
+    lettersRef.current = letters;
+  }, [letters]);
 
-  // Update render state and the ref together.
+  /**
+   * Update render state and the ref together.
+   *
+   * @param {number[]} newPath
+   */
   const updatePath = (newPath) => {
     pathRef.current = newPath;
     setSelectedPath([...newPath]);
@@ -63,7 +80,11 @@ export default function GamePage() {
 
   // ---- Drag logic -------------------------------------------------------
 
-  // Called when the pointer enters a tile while dragging.
+  /**
+   * Called when the pointer enters a tile while dragging.
+   *
+   * @param {number} index
+   */
   const enterTile = useCallback((index) => {
     if (!isDraggingRef.current || index < 0) return;
 
@@ -82,7 +103,11 @@ export default function GamePage() {
     }
   }, []); // no captured state – reads refs only
 
-  // Called when the pointer presses down on a tile to begin selection.
+  /**
+   * Called when the pointer presses down on a tile to begin selection.
+   *
+   * @param {number} index
+   */
   const startDrag = useCallback((index) => {
     isDraggingRef.current = true;
     setFeedback(null);
@@ -91,8 +116,12 @@ export default function GamePage() {
 
   // ---- Word submission (delegates to backend) ---------------------------
 
-  // WordSubmissionService handles: dictionary lookup, board-path validation,
-  // duplicate detection, min-length check, and scoring.
+  /**
+   * WordSubmissionService handles: dictionary lookup, board-path validation,
+   * duplicate detection, min-length check, and scoring.
+   *
+   * @param {string} word
+   */
   const submitWord = useCallback(async (word) => {
     // backend enforces the real rule.
     if (word.length < MIN_WORD_LENGTH) {
@@ -103,7 +132,7 @@ export default function GamePage() {
     if (gameId != null && playerId != null) {
       try {
         // Calls WordSubmissionService.submitWord(gameId, playerId, rawWord)
-        // via GameController 
+        // via GameController
         // endpoint must be uncommented / re-wired there.
         const res = await fetch(`/api/game/${gameId}/word`, {
           method: 'POST',
@@ -135,7 +164,23 @@ export default function GamePage() {
     submitWord(word);
   }, [submitWord]);
 
-  // Global mouseup so releasing outside the grid still finalizes the word.
+  // ---- Board fetch (GET /api/game/{gameId}/board) -----------------------
+
+  useEffect(() => {
+    if (gameId == null) return;
+    setBoardLoading(true);
+    fetch(`/api/game/${gameId}/board`)
+      .then(res => res.json())
+      .then(data => {
+        // boardString rows are separated by \n; each character is one tile.
+        const parsed = data.boardString.split('\n').flatMap(row => [...row]);
+        if (parsed.length === 16) setLetters(parsed);
+      })
+      .catch(() => { /* keep DEV_PLACEHOLDER on network error */ })
+      .finally(() => setBoardLoading(false));
+  }, [gameId]);
+
+  /** Global mouseup so releasing outside the grid still finalizes the word. */
   useEffect(() => {
     window.addEventListener('mouseup', finalize);
     return () => window.removeEventListener('mouseup', finalize);
@@ -182,7 +227,7 @@ export default function GamePage() {
               : '\u00A0' /* keep height stable */}
         </div>
 
-        <div className="boggle-grid">
+        <div className={`boggle-grid${boardLoading ? ' boggle-grid--loading' : ''}`}>
           {letters.map((letter, i) => {
             const isSelected = selectedPath.includes(i);
             const isFirst    = selectedPath[0] === i;

@@ -45,6 +45,7 @@ public class WordSubmissionService{
         NOT_ON_BOARD,
         DUPLICATE
     }
+
     /**
      * Result of a word submission attempt.
      *
@@ -52,17 +53,25 @@ public class WordSubmissionService{
      * for the outcome, the normalized uppercase word, and the awarded points
      * when applicable.
      */
+    @Service
     public static class Result{
+        /**
+         * Whether the submitted word was accepted.
+         */
         public boolean accepted;
+
         /**
          * Status code describing the submission outcome.
          */
         public SubmissionReason reason;
-
         /**
          * The submitted word after trimming and uppercasing.
          */
         public String normalizedWord;
+
+        /**
+         * The number of points awarded for an accepted word.
+         */
         public Integer points;
     }
 
@@ -93,12 +102,20 @@ public class WordSubmissionService{
     }
 
     /**
-     * Method Checks if word submission is valid and return Result data structure;
+     * Validates and records a player's submitted word for a game.
      *
-     * @param gameId the ID of the game; may refer to a SOLO, BOT, or MULTIPLAYER game
-     * @param playerId Id of player submitting the word.
-     * @param rawWord word submitted by user.
-     * @return Returns Result data structure filled in with required data.
+     * <p>The submitted word is trimmed and converted to uppercase before
+     * validation. This method checks that the game exists, the player exists,
+     * the player belongs to the game, the word exists in the dictionary, the
+     * word can be formed on the board, the word has not already been submitted
+     * by that player in that game, and the word length meets the minimum
+     * requirement.
+     *
+     * @param gameId the ID of the game receiving the submission
+     * @param playerId the ID of the player submitting the word
+     * @param rawWord the raw submitted word
+     * @return a {@link Result} describing whether the submission was accepted
+     *         and why
      */
     @Transactional
     public Result submitWord(Integer gameId, Integer playerId, String rawWord){

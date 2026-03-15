@@ -2,13 +2,40 @@ package com.example.Boggle.util;
 
 import java.util.Random;
 
+/**
+ * Utility class for generating and flattening randomized Boggle boards.
+ *
+ * <p>This class uses the weighted letter bag from {@link BoggleBag} to
+ * generate a 4x4 board where more common letters appear more frequently.
+ */
 public class ShuffleUtil extends BoggleBag {
+
+    /**
+     * Random generator used to select letters from the weighted bag.
+     */
     private static final Random shuffle = new Random();
 
+
+    /**
+     * Immutable container for a generated board in both grid and flattened form.
+     */
     public static class GeneratedBoard {
+
+        /**
+         * The generated 4x4 board as a two-dimensional grid.
+         */
         public final String[][] boardGrid;
+        /**
+         * The generated board represented as a newline-separated string.
+         */
         public final String flattened;
 
+        /**
+         * Creates a generated board Result
+         *
+         * @param grid the board 4x4 grid
+         * @param flattened the flattened string representation of the board
+         */
         public GeneratedBoard(String[][] grid, String flattened) {
             this.boardGrid = grid;
             this.flattened = flattened;
@@ -34,6 +61,15 @@ public class ShuffleUtil extends BoggleBag {
         return new GeneratedBoard(board, flat);
     }
 
+    /**
+     * Converts a 4x4 board into a newline-separated string representation.
+     *
+     * <p>Each row is written as four consecutive characters, and rows are
+     * separated by newline characters.
+     *
+     * @param grid the 4x4 board to flatten
+     * @return the flattened string representation of the board
+     */
     public static String flatten(String[][] grid) {
         StringBuilder flattenGrid = new StringBuilder();
         for (int i = 0; i < 4; i++) {

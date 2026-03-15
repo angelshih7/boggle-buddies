@@ -22,8 +22,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
 
+/**
+ * Integration tests for user-related API endpoints.
+ *
+ * These tests start the Spring Boot application on a random port
+ * and verify registration, guest creation, login, and duplicate-user handling.
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-
 public class UserIntegrationAPITests {
 
     @Autowired
@@ -32,17 +37,28 @@ public class UserIntegrationAPITests {
     @LocalServerPort
     int port;
 
+    /**
+     * Clears user data before each test to ensure
+     * a clean database state.
+     */
     @BeforeEach
     void setup() {
         userRepository.deleteAll();
     }
 
     @AfterEach
+    /**
+     * Clears user data after each test to prevent
+     * interference between test cases.
+     */
     void tearDown() {
         userRepository.deleteAll();
     }
 
-
+    /**
+     * Verifies that the register endpoint creates a new user
+     * and returns HTTP 201.
+     */
     @Test
     void testRegisterCreateUser() throws Exception{
         HttpClient client = HttpClient.newHttpClient();
@@ -69,6 +85,11 @@ public class UserIntegrationAPITests {
 
         client.close();
     }
+
+    /**
+     * Verifies that the guest endpoint creates a guest user
+     * and returns HTTP 201.
+     */
     @Test
     void registerCreateGuest() throws Exception{
         HttpClient client = HttpClient.newHttpClient();
@@ -87,6 +108,10 @@ public class UserIntegrationAPITests {
 
     }
 
+    /**
+     * Verifies that the login endpoint authenticates an existing user
+     * with valid credentials and returns HTTP 200.
+     */
     @Test
     void registerCreateUser() throws Exception{
         String storedHash = PasswordUtil.hash("Secret123");
@@ -121,6 +146,10 @@ public class UserIntegrationAPITests {
         client.close();
     }
 
+    /**
+     * Verifies that registration with a username already present
+     * in the database returns HTTP 409.
+     */
     @Test
     void testRegisterUserRepeatedUsername() throws Exception{
         User user = new User("diego9", "diego@test.com", "someHash");

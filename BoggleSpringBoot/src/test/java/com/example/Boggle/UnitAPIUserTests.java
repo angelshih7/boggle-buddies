@@ -18,18 +18,32 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for {@link UserController}.
+ *
+ * These tests verify registration, guest creation,
+ * and login behavior using a mocked user repository.
+ */
 @MockitoBean
 public class UnitAPIUserTests {
 
     private UserRepository userRepository;
     private UserController userController;
 
+    /**
+     * Creates a mocked repository and injects it into the controller
+     * before each test executes.
+     */
     @BeforeEach
     void setup(){
         userRepository = mock(UserRepository.class);
         userController = new UserController(userRepository);
     }
 
+    /**
+     * Verifies that registering a new user with a unique username
+     * and email returns the created user information.
+     */
     @Test
     void testCreateAccountNewUser(){
        UserController.RegisterRequest req = new UserController.RegisterRequest();
@@ -57,6 +71,10 @@ public class UnitAPIUserTests {
         verify(userRepository).save(any(User.class));
     }
 
+    /**
+     * Verifies that creating a guest account succeeds when the
+     * requested guest username is available.
+     */
     @Test
     void testCreateGuestNew(){
         UserController.GuestRequest req = new UserController.GuestRequest();
@@ -77,6 +95,11 @@ public class UnitAPIUserTests {
         verify(userRepository).existsByUsername("Guest");
         verify(userRepository).save(any(User.class));
     }
+
+    /**
+     * Verifies that login succeeds when the username exists
+     * and the provided password matches the stored hash.
+     */
     @Test
     void testloginToExistUser(){
         UserController.LoginRequest req = new UserController.LoginRequest();
@@ -98,6 +121,10 @@ public class UnitAPIUserTests {
         verify(userRepository).findByUsername("Diego9");
     }
 
+    /**
+     * Verifies that registration fails when the requested
+     * username is already taken.
+     */
     @Test
     void testRegisterRepeatedUsername(){
         UserController.RegisterRequest req = new UserController.RegisterRequest();
@@ -111,6 +138,10 @@ public class UnitAPIUserTests {
 
     }
 
+    /**
+     * Verifies that registration fails when the requested
+     * email address is already associated with another account.
+     */
     @Test
     void testRegisterRepeatedEmail(){
         UserController.RegisterRequest req = new UserController.RegisterRequest();
@@ -132,6 +163,10 @@ public class UnitAPIUserTests {
         verify(userRepository, never()).save(any(User.class));
     }
 
+    /**
+     * Verifies that login fails with an unauthorized error
+     * when the username does not exist.
+     */
     @Test
     void testLoginWrongUsername(){
         UserController.LoginRequest req = new UserController.LoginRequest();
@@ -146,6 +181,10 @@ public class UnitAPIUserTests {
 
     }
 
+    /**
+     * Verifies that login fails when the provided password
+     * does not match the stored user password.
+     */
     @Test
     void testLoginWrongPassword(){
         UserController.LoginRequest req = new UserController.LoginRequest();

@@ -3,20 +3,23 @@ import java.security.MessageDigest;
 import java.util.Base64;
 
 /**
- * Utility class for securely hashing and verifying passwords.
+ * Utility class for hashing and verifying passwords.
  *
- * This class uses PBKDF2 with HMAC-SHA256, a random salt, and a configurable
- * iteration count to store passwords in a secure hashed format.
+ * <p>This implementation hashes passwords with SHA-256 and encodes the
+ * resulting hash in Base64 for storage and comparison.
  */
 public final class PasswordUtil {
-    //prevents instantiation.
+
+    /**
+     * Prevents instantiation of this utility class.
+     */
     private PasswordUtil() {}
 
     /**
-     * Hashes a plain-text password using PBKDF2 with a random salt.
+     * Hashes a plain-text password using SHA-256.
      *
      * @param password the plain-text password to hash
-     * @return a formatted string containing the algorithm, iteration count, salt, and derived key
+     * @return the Base64-encoded SHA-256 hash of the password
      * @throws IllegalArgumentException if the password is null or blank
      */
     public static String hash(String password){
@@ -35,11 +38,12 @@ public final class PasswordUtil {
     }
 
     /**
-     * Verifies a plain-text password against a previously stored password hash.
+     * Verifies a plain-text password against a stored password hash.
      *
      * @param password the plain-text password to verify
-     * @param stored the stored password hash string
-     * @return true if the password matches the stored hash; false otherwise
+     * @param stored the stored Base64-encoded password hash
+     * @return {@code true} if the password matches the stored hash;
+     *         {@code false} otherwise
      */
     public static boolean verify(String password, String stored) {
         if (password == null || stored == null) {

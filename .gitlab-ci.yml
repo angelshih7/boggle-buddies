@@ -30,6 +30,5 @@ lint-frontend:
   stage: lint
   script:
     - cd frontend
-    - npm install
-    - npm install eslint@8
+    - npm ci
     - npm run lint

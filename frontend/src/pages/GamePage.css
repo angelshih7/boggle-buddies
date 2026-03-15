@@ -1,4 +1,4 @@
-/* Page layout, fixed to fill viewport and escape App.css root constraints */
+/** Page layout, fixed to fill viewport and escape App.css root constraints */
 .game-page {
   position: fixed;
   inset: 0;
@@ -6,7 +6,7 @@
   text-align: left;
 }
 
-/* Sidebar */
+/** Sidebar */
 .game-sidebar {
   width: 200px;
   flex-shrink: 0;
@@ -19,7 +19,7 @@
   gap: 8px;
 }
 
-/* Player avatar circle */
+/** Player avatar circle */
 .player-avatar {
   width: 68px;
   height: 68px;
@@ -35,7 +35,7 @@
   margin-bottom: 4px;
 }
 
-/* Player name */
+/** Player name */
 .player-name {
   font-size: 1.15rem;
   font-weight: 700;
@@ -45,7 +45,7 @@
   word-break: break-word;
 }
 
-/* Score card */
+/** Score card */
 .score-section {
   display: flex;
   flex-direction: column;
@@ -71,7 +71,7 @@
   line-height: 1;
 }
 
-/* Main content area */
+/** Main content area */
 .game-main {
   flex: 1;
   display: flex;
@@ -82,7 +82,7 @@
   user-select: none; /* prevent text selection while dragging */
 }
 
-/* Current word preview shown above the grid */
+/** Current word preview shown above the grid */
 .word-preview {
   font-size: clamp(1.4rem, 3vw, 2rem);
   font-weight: 800;
@@ -99,7 +99,7 @@
 .word-feedback--bad { color: #dc2626; }
 .word-feedback--dev { color: #6b7280; font-style: italic; }
 
-/* Boggle grid, always square */
+/** Boggle grid, always square */
 .boggle-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -109,7 +109,19 @@
   aspect-ratio: 1 / 1;
 }
 
-/* Individual tile */
+/** Board loading state – dims tiles and pulses while the board fetch is in flight */
+.boggle-grid--loading {
+  opacity: 0.45;
+  pointer-events: none;
+  animation: board-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes board-pulse {
+  from { opacity: 0.45; }
+  to   { opacity: 0.2;  }
+}
+
+/** Individual tile */
 .tile {
   background: #ffffff;
   border-radius: 14px;
@@ -128,7 +140,7 @@
   box-shadow: 0 10px 24px rgba(48, 62, 119, 0.2);
 }
 
-/* Selected tile */
+/** Selected tile */
 .tile--selected {
   background: #4a5fc1;
   transform: translateY(-3px);
@@ -139,7 +151,7 @@
   color: #ffffff;
 }
 
-/* First tile in the current chain – slightly darker to mark the start */
+/** First tile in the current chain – slightly darker to mark the start */
 .tile--first {
   background: #303E77;
 }
@@ -148,7 +160,7 @@
   color: #ffffff;
 }
 
-/* Tile letter */
+/** Tile letter */
 .tile-letter {
   font-size: clamp(1.4rem, 3.5vw, 2.2rem);
   font-weight: 800;
@@ -156,7 +168,7 @@
   font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
 }
 
-/* Qu is two characters, shrink slightly so it fits the tile */
+/** Qu is two characters, shrink slightly so it fits the tile */
 .tile-letter--qu {
   font-size: clamp(1.1rem, 2.5vw, 1.6rem);
 }

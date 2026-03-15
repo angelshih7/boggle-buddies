@@ -21,11 +21,13 @@ import java.util.UUID;
 import static org.springframework.http.HttpStatus.*;
 
 import org.springframework.http.HttpStatus;
-/*
-Rest API for games table manager.
-It manages every request to the backend by frontend in relation to the table.
+/**
+ * REST controller for creating, joining, and retrieving Boggle games.
+ *
+ * <p>This controller supports solo, bot, and multiplayer game creation,
+ * allows a second player to join a waiting multiplayer game, and exposes
+ * endpoints for retrieving game and board information.
  */
-
 @RestController
 @RequestMapping("/api")
 public class GameController{
@@ -50,17 +52,35 @@ public class GameController{
                           WordSubmissionService wordSubmissionService){
        this.gameService = gameService;
        this.gameScoreService = gameScoreService;
-       this. wordSubmissionService = wordSubmissionService;
+       this.wordSubmissionService = wordSubmissionService;
     }
 
+    /**
+     * Supported game modes for game creation.
+     */
     public enum GameMode {SOLO, BOT, MULTIPLAYER}
 
+    /**
+     * Request body for creating a new game.
+     */
     public static class CreateGameRequest{
+        /**
+         * The requested game mode.
+         */
         public GameMode mode;
+
+        /**
+         * The ID of the player creating the game.
+         */
         public Integer playerId;
     }
-
+    /**
+     * Request body for joining an existing multiplayer game.
+     */
     public static class JoinGameRequest{
+        /**
+         * The ID of the player joining the game.
+         */
         public Integer playerId;
     }
 
@@ -76,10 +96,29 @@ public class GameController{
      * Response body summarizing a game.
      */
     public static class GameResponse{
+        /**
+         * The game ID.
+         */
         public Integer gameId;
+
+        /**
+         * The ID of player one.
+         */
         public Integer player1Id;
+
+        /**
+         * The ID of player two, or {@code null} if no second player has joined.
+         */
         public Integer player2Id;
+
+        /**
+         * The public board identifier associated with the game.
+         */
         public String boardId;
+
+        /**
+         * The current game status.
+         */
         public String status;
         public LocalDateTime createdAt;
         public LocalDateTime startedAt;
@@ -105,10 +144,28 @@ public class GameController{
         }
     }
 
+    /**
+     * Response body containing board information.
+     */
     public static class BoardResponse{
 
         public String boardId;
+
+        /**
+         * The flattened board string representation.
+         */
         public String boardString;
+
+        /**
+         * Creates a board response.
+         *
+         * @param boardId the public board identifier
+         * @param boardString the flattened board contents
+         */
+        public BoardResponse(String boardId, String boardString ){
+            this.boardId = boardId;
+            this.boardString = boardString;
+        }
 
         /**
          * Builds a response DTO from a board entity.
@@ -140,7 +197,16 @@ public class GameController{
         }
     }
 
-    //=====Solo /Bot game =======/
+    /**
+     * Creates a new game in solo, bot, or multiplayer mode.
+     *
+     * <p>Solo and bot games begin immediately. Multiplayer games are created
+     * in a waiting state until a second player joins.
+     *
+     * @param request the game creation request
+     * @return a summary of the created game
+     * @throws ResponseStatusException if the request is invalid or the player does not exist
+     */
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/game")
     public GameResponse createGame(@RequestBody CreateGameRequest request){
@@ -161,7 +227,15 @@ public class GameController{
         return GameResponse.GameSummaryDTO(game);
     }
 
-
+    /**
+     * Joins an existing multiplayer game as the second player.
+     *
+     * @param gameId the ID of the game to join
+     * @param request the join request containing the joining player's ID
+     * @return a summary of the updated game
+     * @throws ResponseStatusException if the game does not exist, is not
+     *         joinable, is already full, or the player is invalid
+     */
     @PostMapping("/game/{gameId}/join")
     public GameResponse joinGame(@PathVariable Integer gameId, @RequestBody JoinGameRequest request){
         if (request == null) {
@@ -177,11 +251,25 @@ public class GameController{
         return GameResponse.GameSummaryDTO(game);
     }
 
+    /**
+     * Retrieves a summary of a game by ID.
+     *
+     * @param gameId the game ID
+     * @return a summary of the requested game
+     * @throws ResponseStatusException if the game does not exist
+     */
     @GetMapping("/game/{gameId}")
     public GameResponse getGame(@PathVariable Integer gameId){
         return GameResponse.GameSummaryDTO(gameService.getGame(gameId));
     }
 
+    /**
+     * Retrieves a summary of the board related to the gameID passed.
+     *
+     * @param gameId the game ID
+     * @return the board information for the specified game
+     * @throws ResponseStatusException if the game does not exist.
+     */
     @GetMapping("/game/{gameId}/board")
     public BoardResponse getBoard(@PathVariable Integer gameId){
         return BoardResponse.BoardDTO(gameService.getBoard(gameId));

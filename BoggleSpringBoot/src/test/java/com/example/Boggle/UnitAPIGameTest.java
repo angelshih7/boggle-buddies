@@ -27,6 +27,12 @@ import static org.junit.jupiter.api.AssertionsKt.assertNotNull;
 import static org.junit.jupiter.api.AssertionsKt.assertNull;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit test for {@link GameController}
+ *
+ * These test verify game creation, multiplayer joining,
+ * and board retrieval behavior using mocked repositories.
+ */
 public class UnitAPIGameTest {
 
     private GameController gameController;
@@ -34,7 +40,10 @@ public class UnitAPIGameTest {
     private GameScoreService gameScoreService;
     private WordSubmissionService wordSubmissionService;
 
-
+    /**
+     * Initializes mocked repositories and creates a controller instance
+     * before each test runs.
+     */
     @BeforeEach
     void setup() {
         gameService = mock(GameService.class);
@@ -48,7 +57,10 @@ public class UnitAPIGameTest {
         );
     }
 
-
+    /**
+     * Verifies that creating a solo player game
+     * return the correct game response (board, player) and in-progress status
+     */
     @Test
     void TestCreateGameSolo() {
         User currentUser = new User("Diego9", "diego@test.com", "Secret123");
@@ -81,6 +93,10 @@ public class UnitAPIGameTest {
         verifyNoInteractions(gameScoreService, wordSubmissionService);
     }
 
+    /**
+     * Verifies that creating a bot game assigns the bot as the 2nd player
+     * and returns the correct game response
+     */
     @Test
     void TestCreateGameBot() {
         User currentUser = new User("Diego9", "diego@test.com", "Secret123");
@@ -115,6 +131,10 @@ public class UnitAPIGameTest {
         verify(gameService).createGame(GameController.GameMode.BOT, 2);
     }
 
+    /**
+     * Verifies that creating a multiplayer game places the game
+     * in waiting status until another player joins.
+     */
     @Test
     void TestCreateGameMultiplayer() {
         User firstPlayer = new User("Diego9", "diego@test.com", "Secret123");
@@ -146,6 +166,10 @@ public class UnitAPIGameTest {
         verify(gameService).createGame(GameController.GameMode.MULTIPLAYER, 2);
     }
 
+    /**
+     * Verifies that a second player can successfully join an
+     * existing waiting multiplayer game.
+     */
     @Test
     void testJoinGameSuccess() {
         User firstPlayer = new User("Diego9", "diego@test.com", "Secret123");
@@ -179,6 +203,10 @@ public class UnitAPIGameTest {
         verify(gameService).joinGame(20, 2);
     }
 
+    /**
+     * Verifies that joining a game with a null request body
+     * throws a bad request exception.
+     */
     @Test
     void testJoinGameNullBody() {
         ResponseStatusException ex =
@@ -187,6 +215,10 @@ public class UnitAPIGameTest {
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
     }
 
+    /**
+     * Verifies that attempting to join a non-existent game
+     * throws a not found exception.
+     */
     @Test
     void testJoinGameNotFound() {
         GameController.JoinGameRequest req = new GameController.JoinGameRequest();
@@ -201,6 +233,11 @@ public class UnitAPIGameTest {
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }
 
+
+    /**
+     * Verifies that retrieving a board for an existing game
+     * returns the expected board identifier and board contents.
+     */
     @Test
     void testGetBoard_success() {
         Board board = new Board();
