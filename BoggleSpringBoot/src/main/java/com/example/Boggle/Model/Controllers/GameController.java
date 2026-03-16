@@ -143,12 +143,16 @@ public class GameController{
          * @return a response containing key game details
          */
         public static GameResponse GameSummaryDTO(Game currentGame){
+            if (currentGame == null) {
+                throw new ResponseStatusException(NOT_FOUND, "Game id not found");
+            }
+
             GameResponse gameSummary = new GameResponse();
             gameSummary.gameId = currentGame.getId();
             gameSummary.player1Id = currentGame.getPlayer1().getId();
             gameSummary.player2Id = (currentGame.getPlayer2() == null) ? null : currentGame.getPlayer2().getId();
-            gameSummary.boardId = currentGame.getBoard().getBoardId();
-            gameSummary.status = currentGame.getStatus().name();
+            gameSummary.boardId = (currentGame.getBoard() == null) ? null : currentGame.getBoard().getBoardId();
+            gameSummary.status = (currentGame.getStatus() == null) ? null : currentGame.getStatus().name();
             gameSummary.createdAt = currentGame.getCreatedAt();
             gameSummary.startedAt = currentGame.getStartedAt();
             gameSummary.finishedAt = currentGame.getFinishedAt();
@@ -283,7 +287,11 @@ public class GameController{
      */
     @GetMapping("/game/{gameId}")
     public GameResponse getGame(@PathVariable Integer gameId){
-        return GameResponse.GameSummaryDTO(gameService.getGame(gameId));
+        Game game = gameService.getGame(gameId);
+        if (game == null) {
+            throw new ResponseStatusException(NOT_FOUND, "Game id not found");
+        }
+        return GameResponse.GameSummaryDTO(game);
     }
 
     /**
@@ -313,18 +321,16 @@ public class GameController{
     @PostMapping("/game/{gameId}/submit-word")
     public SubmitWordResponse submitWord(@PathVariable Integer gameId,
                                          @RequestBody SubmitWordRequest request){
-        if(request == null){
-            throw new org.springframework.web.server.ResponseStatusException(
-                    BAD_REQUEST,"playerId is required");
+        if (request == null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Body is required");
         }
         if (request.playerId == null) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "playerId is required");
+            throw new ResponseStatusException(BAD_REQUEST, "playerId is required");
         }
         if (request.word == null) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "word is required");
+            throw new ResponseStatusException(BAD_REQUEST, "word is required");
         }
+
         WordSubmissionService.Result result =
                 wordSubmissionService.submitWord(gameId, request.playerId, request.word);
 
