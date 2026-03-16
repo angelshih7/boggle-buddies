@@ -21,8 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.AssertionsKt.assertNotNull;
 import static org.junit.jupiter.api.AssertionsKt.assertNull;
 import static org.mockito.Mockito.*;
@@ -253,5 +252,236 @@ public class UnitAPIGameTest {
         assertEquals("ABCD\nEFGH\nIJKL\nMNOP", response.boardString);
 
         verify(gameService).getBoard(50);
+    }
+
+    /**
+     * Verifies  that creating a game with a null request body
+     * throws a bad request exception.
+     */
+    @Test
+    void testCreateGameNullBody(){
+         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                 () -> gameController.createGame(null));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("400 BAD_REQUEST \"Body is required\"", ex.getMessage());
+    }
+
+
+    /**
+     * Verifies that creating a game with no playerId
+     * throws a bad request exception.
+     */
+    @Test
+    void testCreateGameNoPlayerId(){
+        GameController.CreateGameRequest req = new GameController.CreateGameRequest();
+        req.mode = GameController.GameMode.SOLO;
+        req.playerId = null;
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> gameController.createGame(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("400 BAD_REQUEST \"playerId is required\"", ex.getMessage());
+    }
+
+    /**
+     * Verifies that creating a game without a mode
+     * throws a bad request exception.
+     */
+    @Test
+    void testCreateGameNoMode(){
+        GameController.CreateGameRequest req = new GameController.CreateGameRequest();
+        req.mode = null;
+        req.playerId = 2;
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> gameController.createGame(req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("400 BAD_REQUEST \"Mode is required\"", ex.getMessage());
+    }
+
+    /**
+     * Verifies joining a game with no playerId
+     * throws a bad request exception
+     */
+    @Test
+    void testJoinGameMissingPlayerId(){
+        GameController.JoinGameRequest req = new GameController.JoinGameRequest();
+        req.playerId = null;
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+        ()->gameController.joinGame(20,req));
+        assertEquals(HttpStatus.BAD_REQUEST,ex.getStatusCode());
+        assertEquals("400 BAD_REQUEST \"playerId is required\"", ex.getMessage());
+    }
+
+    /**
+     * Verifies that retrieving an existing game
+     * return the correct game summary
+     */
+    @Test
+    void testGetGameSuccess(){
+        User player1 = new User("diego9","diego@test.com","Secret123");
+        player1.setId(1);
+
+        User player2 = new User("james2","james@test.com","secret123");
+        player2.setId(2);
+
+        Board board = new Board();
+        board.setBoardId("board_4");
+        board.setBoardString("ABCD\nEFGH\nIJKL\nMNOP");
+
+        Game game = new Game();
+        game.setId(50);
+        game.setStatus(GameStatus.IN_PROGRESS);
+
+        GameController.GameResponse response = gameController.getGame(50);
+
+        assertNotNull(response);
+        assertEquals(50, response.gameId);
+        assertEquals(1, response.player1Id);
+        assertEquals(2, response.player2Id);
+        assertEquals("board-50", response.boardId);
+        assertEquals("IN_PROGRESS", response.status);
+
+        verify(gameService).getGame(50);
+    }
+
+    /**
+     * Verifies that retrieving a non-existent game
+     * throws a not found exception.
+     */
+    @Test
+    void testGetGameNonExistent(){
+        when(gameService.getGame(2))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND,"Game id not found"));
+
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> gameController.getGame(999));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    /**
+     * Verifies that retrieving a board for non-existent game
+     * throws not found exception
+     */
+    @Test
+    void testGetBoardNullGame(){
+        when(gameService.getBoard(50))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND,"Board id not found"));
+
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> gameController.getBoard(50));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
+    }
+
+    /**
+     * verifies that submitting a valid word
+     * returns the expect submit-word response
+     */
+    @Test
+    void testSubmitWordSuccess(){
+        GameController.SubmitWordRequest req = new GameController.SubmitWordRequest();
+        req.playerId = 2;
+        req.word = "apple";
+
+        WordSubmissionService.Result result = new WordSubmissionService.Result();
+        result.accepted = true;
+        result.reason = WordSubmissionService.SubmissionReason.OK;
+        result.normalizedWord = "APPLE";
+        result.points = 5;
+
+        when(wordSubmissionService.submitWord(15,2,"apple"))
+                .thenReturn(result);
+
+        GameController.SubmitWordResponse response = gameController.submitWord(15,req);
+
+        assertNotNull(response);
+        assertTrue(response.accepted);
+        assertEquals("OK", response.reason);
+        assertEquals("APPLE", response.normalizedWord);
+        assertEquals(2, response.points);
+
+        verify(wordSubmissionService).submitWord(15, 2, "apple");
+    }
+
+    /**
+     * Verifies that submitting a word with a null body
+     * throws a bad request exception.
+     */
+    @Test
+    void testSubmitWordNullBody() {
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> gameController.submitWord(15, null));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+    }
+
+    /**
+     * Verifies that submitting a word without playerId
+     * throws a bad request exception.
+     */
+    @Test
+    void testSubmitWordMissingPlayerId() {
+        GameController.SubmitWordRequest req = new GameController.SubmitWordRequest();
+        req.playerId = null;
+        req.word = "apple";
+
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> gameController.submitWord(15, req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("400 BAD_REQUEST \"playerId is required\"", ex.getMessage());
+    }
+
+    /**
+     * Verifies that submitting a word without the word field
+     * throws a bad request exception.
+     */
+    @Test
+    void testSubmitWordMissingWord() {
+        GameController.SubmitWordRequest req = new GameController.SubmitWordRequest();
+        req.playerId = 2;
+        req.word = null;
+
+        ResponseStatusException ex =
+                assertThrows(ResponseStatusException.class, () -> gameController.submitWord(15, req));
+
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertEquals("400 BAD_REQUEST \"word is required\"", ex.getMessage());
+    }
+
+    /**
+     * Verifies that retrieving a score delegates to the score service.
+     */
+    @Test
+    void testGetScoreSuccess() {
+        GameScoreService.Totals totals = mock(GameScoreService.Totals.class);
+
+        when(gameScoreService.computeTotals(33)).thenReturn(totals);
+
+        GameScoreService.Totals response = gameController.getScore(33);
+
+        assertNotNull(response);
+        assertEquals(totals, response);
+        verify(gameScoreService).computeTotals(33);
+    }
+
+    /**
+     * Verifies that finishing a game delegates to the score service.
+     */
+    @Test
+    void testFinishGameSuccess() {
+        GameScoreService.Totals totals = mock(GameScoreService.Totals.class);
+
+        when(gameScoreService.finishGame(44)).thenReturn(totals);
+
+        GameScoreService.Totals response = gameController.finishGame(44);
+
+        assertNotNull(response);
+        assertEquals(totals, response);
+        verify(gameScoreService).finishGame(44);
     }
 }
