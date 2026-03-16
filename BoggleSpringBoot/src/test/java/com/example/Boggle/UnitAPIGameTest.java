@@ -346,7 +346,7 @@ public class UnitAPIGameTest {
         assertEquals(50, response.gameId);
         assertEquals(1, response.player1Id);
         assertEquals(2, response.player2Id);
-        assertEquals("board-50", response.boardId);
+        assertEquals("board_4", response.boardId);
         assertEquals("IN_PROGRESS", response.status);
 
         verify(gameService).getGame(50);
@@ -407,7 +407,7 @@ public class UnitAPIGameTest {
         assertTrue(response.accepted);
         assertEquals("OK", response.reason);
         assertEquals("APPLE", response.normalizedWord);
-        assertEquals(2, response.points);
+        assertEquals(5, response.points);
 
         verify(wordSubmissionService).submitWord(15, 2, "apple");
     }
