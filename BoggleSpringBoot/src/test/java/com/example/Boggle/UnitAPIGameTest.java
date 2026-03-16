@@ -334,6 +334,11 @@ public class UnitAPIGameTest {
         Game game = new Game();
         game.setId(50);
         game.setStatus(GameStatus.IN_PROGRESS);
+        game.setPlayer1(player1);
+        game.setPlayer2(player2);
+        game.setBoard(board);
+
+        when(gameService.getGame(50)).thenReturn(game);
 
         GameController.GameResponse response = gameController.getGame(50);
 
