@@ -55,8 +55,7 @@ export default function GamePage() {
   const playerId   = location.state?.playerId ?? null;
 
   const [letters, setLetters]           = useState(location.state?.letters ?? DEV_PLACEHOLDER);
-  const [boardLoading, setBoardLoading] = useState(gameId != null);
-  const [score, setScore]               = useState(location.state?.score ?? 0);
+  const [boardLoading, setBoardLoading] = useState(() => gameId != null);  const [score, setScore]               = useState(location.state?.score ?? 0);
   const [selectedPath, setSelectedPath] = useState([]); // tile indices in selection order
   const [feedback, setFeedback]         = useState(null);
 
@@ -168,16 +167,28 @@ export default function GamePage() {
 
   useEffect(() => {
     if (gameId == null) return;
-    setBoardLoading(true);
-    fetch(`/api/game/${gameId}/board`)
-      .then(res => res.json())
-      .then(data => {
-        // boardString rows are separated by \n; each character is one tile.
-        const parsed = data.boardString.split('\n').flatMap(row => [...row]);
-        if (parsed.length === 16) setLetters(parsed);
-      })
-      .catch(() => { /* keep DEV_PLACEHOLDER on network error */ })
-      .finally(() => setBoardLoading(false));
+
+    const controller = new AbortController();
+
+    fetch(`/api/game/${gameId}/board`, { signal: controller.signal })
+        .then(res => res.json())
+        .then(data => {
+          //Convert boardString into a flat array of 16 tile letters.
+          //Example backend format:
+          //"ABCD\nEFGH\nIJKL\nMNOP"
+          const parsed = data.boardString.split('\n').flatMap(row => [...row]);
+
+          //Only update the board if the parsed result matches the expected size.
+          if (parsed.length === 16) setLetters(parsed);
+        })
+        .catch(() => {
+          //Network error or aborted request → keep existing letters
+          //(DEV_PLACEHOLDER will remain if the fetch never succeeds).
+        })
+        .finally(() => setBoardLoading(false));
+
+    //Abort the request if the component unmounts or gameId changes.
+    return () => controller.abort();
   }, [gameId]);
 
   /** Global mouseup so releasing outside the grid still finalizes the word. */
