@@ -20,7 +20,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
  * of a game based on the point values of words found during play.
  * Class has 2 functions
  *
- *  * Is called by {@link GameController} class;
+ * Is called by {@link GameController} class;
  *
  * 1. Compute the current score totals while the game is in progress.
  * 2. Finalize the game and record the winner.
@@ -28,8 +28,10 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @Service
 public class GameScoreService {
     /**
-     * Data structure for point storing.
-     * Holds the score totals for each player and the ID of the winning player.
+     * Summary of score totals for a game.
+     *
+     * <p>This object stores both player IDs, their point totals, the current
+     * game status, and the winning player when one exists.
      */
     public static class Totals{
         public Integer gameId;
@@ -37,7 +39,15 @@ public class GameScoreService {
         public Integer player1Id;
         public Integer player2Id;
         public int player1Points;
+
+        /**
+         * The total points earned by player two, or {@code null} if no second player exists.
+         */
         public Integer player2Points;
+
+        /**
+         * The ID of the winning player, or {@code null} if the game is tied.
+         */
         public Integer winnerPlayerId;
     }
 
