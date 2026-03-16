@@ -25,9 +25,6 @@ public class Dictionary {
     @Column(name="point_value", nullable = false)
     private Integer pointValue;
 
-    @Column(name="created_at",insertable = false,updatable = false)
-    private LocalDateTime createdAt;
-
     /**
      * Creates an empty dictionary entity.
      */
@@ -58,14 +55,5 @@ public class Dictionary {
      */
     public int getPointValue() {
         return pointValue;
-    }
-
-    /**
-     * Returns the time the dictionary row was created.
-     *
-     * @return the creation timestamp
-     */
-    public LocalDateTime getCreatedAt(){
-        return createdAt;
     }
 }
