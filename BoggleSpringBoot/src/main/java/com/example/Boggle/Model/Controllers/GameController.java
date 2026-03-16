@@ -85,7 +85,7 @@ public class GameController{
     }
 
     /**
-     *
+     * Request body for submitting a word during an active game.
      */
     public static class SubmitWordRequest {
         public Integer playerId;
@@ -120,8 +120,20 @@ public class GameController{
          * The current game status.
          */
         public String status;
+
+        /**
+         * The time the game record was created.
+         */
         public LocalDateTime createdAt;
+
+        /**
+         * The time gameplay began, or {@code null} if the game has not started.
+         */
         public LocalDateTime startedAt;
+
+        /**
+         * The time gameplay ended, or {@code null} if the game is not finished.
+         */
         public LocalDateTime finishedAt;
 
         /**
@@ -170,12 +182,34 @@ public class GameController{
         }
     }
 
+    /**
+     * Response body describing the outcome of a word submission.
+     */
     public static class SubmitWordResponse{
         public boolean accepted;
+
+        /**
+         * The reason code describing the submission result.
+         */
         public String reason;
+
+        /**
+         * The submitted word after normalization.
+         */
         public String normalizedWord;
+
+        /**
+         * The number of points awarded for the submitted word, if accepted.
+         */
         public Integer points;
 
+        /**
+         * Builds a response DTO from a word submission result.
+         *
+         * @param result the service result describing the submission outcome
+         * @return a response containing acceptance status, reason, normalized word,
+         *         and awarded points
+         */
         public static SubmitWordResponse SubmitWordDTO(WordSubmissionService.Result result){
             SubmitWordResponse submitWordResult = new SubmitWordResponse();
             submitWordResult.accepted = result.accepted;
@@ -265,11 +299,16 @@ public class GameController{
     }
 
     /**
-     * Retrieves a summary of the Submit
+     * Validates and records a submitted word for a player in a game.
      *
-     * @param gameId
-     * @param request
-     * @return
+     * <p>The request must include both a player ID and a word. The word is
+     * validated by the word submission service and the result is returned to
+     * the client.
+     *
+     * @param gameId the ID of the game receiving the submission
+     * @param request the submission request containing the player ID and word
+     * @return the result of the word submission attempt
+     * @throws ResponseStatusException if the request body, player ID, or word is missing
      */
     @PostMapping("/game/{gameId}/submit-word")
     public SubmitWordResponse submitWord(@PathVariable Integer gameId,
@@ -293,9 +332,10 @@ public class GameController{
     }
 
     /**
+     * Retrieves the current score totals for a game.
      *
-     * @param gameId
-     * @return
+     * @param gameId the ID of the game
+     * @return the current point totals and leading player information
      */
     @GetMapping("/game/{gameId}/score")
     public GameScoreService.Totals getScore(@PathVariable Integer gameId){
@@ -303,9 +343,13 @@ public class GameController{
     }
 
     /**
+     * Finalizes a game and returns the final score totals.
      *
-     * @param gameId
-     * @return
+     * <p>This marks the game as finished, records the finish time, and stores
+     * the winner when one exists.
+     *
+     * @param gameId the ID of the game to finish
+     * @return the final score totals after the game is completed
      */
     @PostMapping("/game/{gameId}/finish")
     public GameScoreService.Totals finishGame(@PathVariable Integer gameId){

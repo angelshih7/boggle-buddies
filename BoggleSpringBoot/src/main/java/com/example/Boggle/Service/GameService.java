@@ -19,6 +19,14 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+/**
+ * Service responsible for creating, joining, and retrieving Boggle games
+ * and their associated boards.
+ *
+ * <p>This service handles solo, bot, and multiplayer game setup, validates
+ * player existence, creates randomized boards, and manages state changes
+ * when players join multiplayer games.
+ */
 @Service
 public class GameService {
 
@@ -26,6 +34,14 @@ public class GameService {
     private final BoardRepository boardRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Constructs a GameService with the repositories required to manage games,
+     * boards, and users.
+     *
+     * @param gameRepository repository storing game records
+     * @param boardRepository repository storing generated boards
+     * @param userRepository repository storing players and bot users
+     */
     public GameService(GameRepository gameRepository,
                        BoardRepository boardRepository,
                        UserRepository userRepository) {
@@ -34,6 +50,17 @@ public class GameService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Creates a new game for the given player and mode.
+     *
+     * <p>Solo and bot games begin immediately. Multiplayer games are created
+     * in a waiting state until a second player joins.
+     *
+     * @param mode the requested game mode
+     * @param playerId the ID of the player creating the game
+     * @return the saved game entity
+     * @throws ResponseStatusException if the mode is missing or the player does not exist
+     */
     public Game createGame(GameController.GameMode mode, Integer playerId) {
         if (mode == null) {
             throw new ResponseStatusException(BAD_REQUEST, "mode is required");
@@ -65,6 +92,15 @@ public class GameService {
         return gameRepository.save(game);
     }
 
+    /**
+     * Adds a second player to a waiting multiplayer game.
+     *
+     * @param gameId the ID of the game to join
+     * @param playerId the ID of the joining player
+     * @return the updated saved game entity
+     * @throws ResponseStatusException if the game does not exist, is not joinable,
+     *         is already full, or the player is invalid
+     */
     public Game joinGame(Integer gameId, Integer playerId) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game id not found"));
@@ -90,15 +126,35 @@ public class GameService {
         return gameRepository.save(game);
     }
 
+    /**
+     * Retrieves a game by its ID.
+     *
+     * @param gameId the ID of the requested game
+     * @return the matching game entity
+     * @throws ResponseStatusException if the game does not exist
+     */
     public Game getGame(Integer gameId) {
         return gameRepository.findById(gameId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game id not found"));
     }
 
+
+    /**
+     * Retrieves the board associated with a game.
+     *
+     * @param gameId the ID of the game
+     * @return the board linked to the game
+     * @throws ResponseStatusException if the game does not exist
+     */
     public Board getBoard(Integer gameId) {
         return getGame(gameId).getBoard();
     }
 
+    /**
+     * Generates a shuffled Boggle board and saves it to the database.
+     *
+     * @return the saved board entity
+     */
     private Board createAndSaveBoard() {
         String flattened = ShuffleUtil.shuffledBoard().flattened;
 
@@ -109,6 +165,11 @@ public class GameService {
         return boardRepository.save(board);
     }
 
+    /**
+     * Retrieves the bot user if it already exists, or creates and saves it otherwise.
+     *
+     * @return the existing or newly created bot user
+     */
     private User getOrCreateBot() {
         return userRepository.findByUsername("bot")
                 .orElseGet(() -> {
@@ -118,6 +179,14 @@ public class GameService {
                 });
     }
 
+    /**
+     * Loads a user by ID and throws an error if the user is missing.
+     *
+     * @param userId the ID of the required user
+     * @param fieldName the request field name used in error messages
+     * @return the matching user
+     * @throws ResponseStatusException if the user ID is missing or not found
+     */
     private User requireUser(Integer userId, String fieldName) {
         if (userId == null) {
             throw new ResponseStatusException(BAD_REQUEST, fieldName + " is required");
