@@ -5,14 +5,17 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-/*
-Represents a persisted Boggle board row in the boards table, including board layout and creation time.
- */
 
+
+/**
+ * Tabl
+ */
 @Entity
 @Table(name = "boards")
 public class Board {
-    //constructor of board
+    /**
+     * constructor board table
+     */
     public Board(){}
     @Id
     @Column(name = "board_id",length = 50, nullable = false)

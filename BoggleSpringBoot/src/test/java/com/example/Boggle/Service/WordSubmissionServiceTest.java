@@ -1,10 +1,6 @@
 package com.example.Boggle.Service;
 
-import com.example.Boggle.Model.Tables.Board;
-import com.example.Boggle.Model.Tables.Dictionary;
-import com.example.Boggle.Model.Tables.FoundWord;
-import com.example.Boggle.Model.Tables.Game;
-import com.example.Boggle.Model.Tables.User;
+import com.example.Boggle.Model.Tables.*;
 import com.example.Boggle.repository.DictionaryRepository;
 import com.example.Boggle.repository.FoundWordRepository;
 import com.example.Boggle.repository.GameRepository;
@@ -62,6 +58,8 @@ class WordSubmissionServiceTest {
         game.setPlayer1(player1);
         game.setPlayer2(player2);
         game.setBoard(board);
+        game.setStatus(GameStatus.IN_PROGRESS);
+
     }
 
     @Test
@@ -73,7 +71,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cow");
 
         assertFalse(result.accepted);
-        assertEquals("NOT_IN_DICTIONARY", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.NOT_IN_DICTIONARY, result.reason);
         assertEquals("COW", result.normalizedWord);
         verify(foundWordRepository, never()).save(any());
     }
@@ -91,7 +89,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cat");
 
         assertFalse(result.accepted);
-        assertEquals("DUPLICATE", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.DUPLICATE, result.reason);
         verify(foundWordRepository, never()).save(any());
     }
 
@@ -110,7 +108,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cat");
 
         assertTrue(result.accepted);
-        assertEquals("OK", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.OK, result.reason);
         assertEquals("CAT", result.normalizedWord);
         assertEquals(2, result.points);
 
@@ -137,7 +135,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "dog");
 
         assertFalse(result.accepted);
-        assertEquals("DUPLICATE", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.DUPLICATE, result.reason);
     }
 
     @Test
@@ -151,7 +149,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cow");
 
         assertFalse(result.accepted);
-        assertEquals("NOT_ON_BOARD", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.NOT_ON_BOARD, result.reason);
     }
 
     @Test
@@ -165,7 +163,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 99, "cat");
 
         assertFalse(result.accepted);
-        assertEquals("PLAYER_NOT_IN_GAME", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.PLAYER_NOT_IN_GAME, result.reason);
     }
 
     private static void setPrivateId(User user, Integer id) {

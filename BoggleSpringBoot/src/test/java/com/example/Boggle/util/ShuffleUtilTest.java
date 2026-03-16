@@ -19,7 +19,7 @@ class ShuffleUtilTest {
 
     @Test
     void shuffleBoardReturnsFourByFourBoardAndFlattenedString() {
-        ShuffleUtil.GeneratedBoard generatedBoard = ShuffleUtil.shuffle_board();
+        ShuffleUtil.GeneratedBoard generatedBoard = ShuffleUtil.shuffledBoard();
 
         assertNotNull(generatedBoard);
         assertNotNull(generatedBoard.boardGrid);
