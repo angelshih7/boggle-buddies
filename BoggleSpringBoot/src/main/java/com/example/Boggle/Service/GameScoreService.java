@@ -122,6 +122,4 @@ public class GameScoreService {
         totals.status =  GameStatus.FINISHED.name();
         return totals;
     }
-
-
 }
