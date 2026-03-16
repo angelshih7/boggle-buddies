@@ -1,13 +1,21 @@
 import { useState } from "react";
 import { Card, Form, Button } from "react-bootstrap";
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom";
 import "./LoginPage.css";
 
-const USERNAME_REGEX = /^[a-zA-Z0-9_]*$/;
+const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/; // Allows only letters, numbers, and underscores
 const MIN_USERNAME_LENGTH = 5;
 const MIN_PASSWORD_LENGTH = 7;
+const STORAGE_KEY = "bbUser";
+
+/**
+ * SignupPage is the signup page that includes a field for username, email, password, and confirm password that has
+ * several checks from frontend and from API before authenticating and storing user info. 
+ * Page routes to HomePage and LoginPage
+ */
 export default function SignupPage() {
     const [usernameInput, setUsernameInput] = useState("");
+    const [emailInput, setEmailInput] = useState("");
     const [passwordInput, setPasswordInput] = useState("");
     const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
     const [usernameError, setUsernameError] = useState(false);
@@ -15,19 +23,22 @@ export default function SignupPage() {
 
     function handleSignup(e) {
         e.preventDefault();
-        const userName = usernameInput.trim();
+        const username = usernameInput.trim();
+        const email = emailInput.trim();
         const password = passwordInput.trim();
         const confirmPassword = confirmPasswordInput.trim();
 
         // Basic requirements for username and password
-        if (!userName || !password || !confirmPassword) {
+        if (!username || !email || !password || !confirmPassword) {
             alert("Please fill out all fields.");
             return;
         }
-        if (userName.length < MIN_USERNAME_LENGTH) {
+        if (username.length < MIN_USERNAME_LENGTH) {
             alert(`Username should be at least ${MIN_USERNAME_LENGTH} characters.`);
             return;
         }
+        // TODO: basic checks for email like @, .com ...
+
         if (password !== confirmPassword){
             alert("Passwords do not match!");
             return;
@@ -37,10 +48,42 @@ export default function SignupPage() {
             return;
         }
 
-        // TODO: Call API to check signin credentials. If valid, logs in
+        // Basic startup call to API, currently not working due to CORS violation but implemented
+        fetch(`http://localhost:8080/api/users/register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username: username,
+                email: email,
+                password: password
+            })
+        }).then(res => {
+            if (res.status === 409) {
+                alert("Username or email already taken");
+                return null;
+            }
+            if (res.status !== 201) {
+                alert("Something went wrong");
+                return null;
+            }
+            return res.json();
+        }).then(data => {
+            if (!data) return;
 
-        alert("Account created!");
-        navigate("/home");
+            saveAccount(data);
+            alert(`Signed up as ${data.username}, welcome to Boggle Buddies!`);
+            navigate("/home");
+        });
+    }
+
+    /**
+     * Stores authenticated user data in localStorage
+     * @param {*} account the authenticated user object
+     */
+    function saveAccount(account) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(account));
     }
 
     return (
@@ -61,7 +104,7 @@ export default function SignupPage() {
                             onChange={e => {
                                 const value = e.target.value;
                                 setUsernameInput(value);
-                                setUsernameError(!USERNAME_REGEX.test(value))
+                                setUsernameError(!USERNAME_REGEX.test(value));
                             }}
                             placeholder="Enter your username"
                             isInvalid={usernameError}
@@ -71,6 +114,15 @@ export default function SignupPage() {
                                 Only letters, numbers, and underscores allowed.
                             </div>
                         )}
+                    </Form.Group>
+                    <Form.Group>
+                        <Form.Label>Email:</Form.Label>
+                        <Form.Control
+                            className="bb-input"
+                            value={emailInput} 
+                            onChange={e => setEmailInput(e.target.value)}
+                            placeholder="Enter your email e.g. name@example.com "
+                        />
                     </Form.Group>
                     <Form.Group>
                         <Form.Label>Password:</Form.Label>
@@ -94,7 +146,7 @@ export default function SignupPage() {
                     </Form.Group>
                     <Button 
                         className="btn-primary" 
-                        disabled={!usernameInput || !passwordInput || !confirmPasswordInput || usernameError}
+                        disabled={!usernameInput || !emailInput || !passwordInput || !confirmPasswordInput || usernameError}
                         type="submit"
                     >Create Account</Button>
                 </Form>
