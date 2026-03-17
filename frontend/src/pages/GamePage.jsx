@@ -32,13 +32,18 @@ function isAdjacent(a, b) {
 
 /** rejection reason returned by WordSubmissionService */
 const REASON_LABEL = {
-  TOO_SHORT:         'too short (min 3 letters)',
-  NOT_IN_DICTIONARY: 'not a word',
-  NOT_ON_BOARD:      'not on board',
-  DUPLICATE:         'already found',
-  OK:                '✓',
-  DEV_MODE:          '',
-  ERROR:             'network error',
+  TOO_SHORT:            'too short (min 3 letters)',
+  NOT_IN_DICTIONARY:    'not a word',
+  NOT_ON_BOARD:         'not on board',
+  DUPLICATE:            'already found',
+  EMPTY_WORD:           'no word entered',
+  GAME_NOT_FOUND:       'game not found',
+  PLAYER_NOT_FOUND:     'player not found',
+  PLAYER_NOT_IN_GAME:   'player not in this game',
+  GAME_NOT_IN_PROGRESS: 'game is not active',
+  OK:                   '✓',
+  DEV_MODE:             '',
+  ERROR:                'network error',
 };
 
 // -----------------------------------------------------------------------
@@ -48,8 +53,8 @@ export default function GamePage() {
   const playerName = location.state?.playerName ?? 'Guest';
   /**
    * gameId / playerId are needed to call WordSubmissionService via the REST API.
-   * POST /api/game/{gameId}/word must be wired to WordSubmissionService
-   * in GameController (the old submitWord endpoint was removed).
+   * POST /api/game/{gameId}/submit-word delegates to WordSubmissionService
+   * in GameController.
    */
   const gameId     = location.state?.gameId   ?? null;
   const playerId   = location.state?.playerId ?? null;
@@ -131,9 +136,8 @@ export default function GamePage() {
     if (gameId != null && playerId != null) {
       try {
         // Calls WordSubmissionService.submitWord(gameId, playerId, rawWord)
-        // via GameController
-        // endpoint must be uncommented / re-wired there.
-        const res = await fetch(`/api/game/${gameId}/word`, {
+        // via GameController POST /api/game/{gameId}/submit-word.
+        const res = await fetch(`/api/game/${gameId}/submit-word`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ playerId, word }),
