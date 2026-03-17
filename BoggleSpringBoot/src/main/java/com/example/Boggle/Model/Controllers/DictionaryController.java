@@ -1,10 +1,9 @@
 package com.example.Boggle.Model.Controllers;
-
 import com.example.Boggle.Model.Tables.Dictionary;
 import com.example.Boggle.repository.DictionaryRepository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
-
+import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -55,6 +54,6 @@ public class DictionaryController {
         return dictionaryRepository.findAll()
                 .stream()
                 .map(d -> new DictionaryDTO(d.getWord(), d.getPointValue()))
-                .collect(Collectors.toList());
+                .toList(); // Cleaner syntax for modern Java
     }
-}ju
+}

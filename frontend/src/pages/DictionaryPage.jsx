@@ -1,28 +1,30 @@
 import React, { useEffect, useState } from "react";
 import './DictionaryPage.css';
 
-
-/**
- * DictionaryPage
- *
- * Fetches all dictionary words from the backend and displays them
- * in a simple table with "Word" and "Point Value" columns.
- */
 const DictionaryPage = () => {
     const [words, setWords] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Fetch all words from your backend with an empty header
-        fetch("http://localhost:8080/api/dictionary/all", {
-            method: "GET"
-        })
-            .then((res) => res.json())
-            .then((data) => setWords(data))
-            .catch((err) => console.error("Error fetching dictionary:", err));
+        fetch("/api/dictionary/all")
+            .then((res) => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
+            .then((data) => {
+                setWords(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error("Error fetching dictionary:", err);
+                setLoading(false);
+            });
     }, []);
 
+    if (loading) return <p>Loading dictionary...</p>;
+
     return (
-        <div>
+        <div className="dictionary-container">
             <h1>Dictionary</h1>
             <table>
                 <thead>
@@ -32,10 +34,11 @@ const DictionaryPage = () => {
                 </tr>
                 </thead>
                 <tbody>
-                {words.map((word) => (
-                    <tr key={word.id}>
-                        <td>{word.word}</td>
-                        <td>{word.pointValue}</td>
+                {words.map((entry) => (
+                    /* Added the 'key' prop here */
+                    <tr key={entry.word}>
+                        <td>{entry.word}</td>
+                        <td>{entry.pointValue}</td>
                     </tr>
                 ))}
                 </tbody>
@@ -43,4 +46,5 @@ const DictionaryPage = () => {
         </div>
     );
 };
+
 export default DictionaryPage;
