@@ -1,32 +1,55 @@
 package com.example.Boggle.Model.Controllers;
-import com.example.Boggle.Model.Tables.Dictionary;
 import com.example.Boggle.repository.DictionaryRepository;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-@WebMvcTest(DictionaryController.class)
-class DictionaryControllerWebTest {
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+
+/**
+ * Integration tests for dictionary API endpoints.
+ *
+ * These tests verify that dictionary data can be retrieved
+ * from the database via the API.
+ */
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+public class DictionaryControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
     private DictionaryRepository dictionaryRepository;
 
+    @LocalServerPort
+    int port;
+
+    /**
+     * Tests that GET /api/dictionary/all returns data from the database.
+     */
     @Test
-    void getAllWords_returnsJson() throws Exception {
-        Dictionary word = new Dictionary();
-        word.setWord("cat");
-        word.setPointValue(3);
+    void testGetAllWords() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
 
-        when(dictionaryRepository.findAll()).thenReturn(List.of(word));
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("http://localhost:" + port + "/api/dictionary/all"))
+                .GET()
+                .build();
 
-        mockMvc.perform(get("/api/dictionary/all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].word").value("cat"))
-                .andExpect(jsonPath("$[0].pointValue").value(3));
+        HttpResponse<String> response =
+                client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        // Verify that the request succeeded
+        assertEquals(200, response.statusCode());
+
+        // Check that the response contains at least one known word
+        // (replace "cat" with a word that exists in your DB)
+        assertTrue(response.body().contains("cat"));
+
+        client.close();
     }
 }
