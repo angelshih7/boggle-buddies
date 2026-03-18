@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -194,5 +195,9 @@ public class GameService {
 
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, fieldName + " not found"));
+    }
+
+    public List<Game> getWaitingGames() {
+        return gameRepository.findByStatus(GameStatus.WAITING);
     }
 }

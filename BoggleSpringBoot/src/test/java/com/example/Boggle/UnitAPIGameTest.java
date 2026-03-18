@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -232,6 +233,37 @@ public class UnitAPIGameTest {
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatusCode());
     }
 
+    @Test
+    void testListWaiting() {
+        GameController.ListWaitingResponse waitingResponse = gameController.listWaitingGames();
+        assertEquals(0, waitingResponse.gameIds.size());
+
+        Board board = new Board();
+        User user1 = new User("user1", "someemail@nowhere.com", "");
+        user1.setId(1);
+
+        Game savedGame = new Game(user1, null, board);
+        savedGame.setId(11);
+        savedGame.setStatus(GameStatus.WAITING);
+        when(gameService.getWaitingGames()).thenReturn(List.of(savedGame));
+        assertEquals(savedGame.getStatus(), GameStatus.WAITING);
+
+        waitingResponse = gameController.listWaitingGames();
+        assertEquals(1, waitingResponse.gameIds.size());
+
+        // Reject in-progress game
+        Board board2 = new Board();
+        User user2 = new User("user1", "someemail@nowhere.com", "");
+        user1.setId(2);
+
+        Game savedGame2 = new Game(user2, null, board2);
+        savedGame.setId(12);
+        savedGame.setStatus(GameStatus.IN_PROGRESS);
+        when(gameService.getWaitingGames()).thenReturn(List.of(savedGame));
+
+        waitingResponse = gameController.listWaitingGames();
+        assertEquals(1, waitingResponse.gameIds.size());
+    }
 
     /**
      * Verifies that retrieving a board for an existing game
