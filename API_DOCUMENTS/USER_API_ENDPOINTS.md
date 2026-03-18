@@ -177,3 +177,30 @@ Content-Type: application/json
 
 ## Date-sensitive data (frontend caution)
 - Guest accounts may be deleted after a TTL based on `users.created_at` (if cleanup is enabled). Frontend should treat guest identities as temporary.
+
+---
+
+# AI Prompt used
+
+**User prompt:**
+> I’m documenting our Boggle backend for frontend developers. I’m going to upload `UserController.java` and `USER_API_ENDPOINTS.md`. Please review the markdown document and make sure it is written as a clear frontend-facing API reference.
+>
+> Requirements:
+> - Keep it easy to read for frontend developers
+> - Preserve the endpoint structure and examples
+> - Document the real request bodies, success responses, and error cases
+> - Keep the formatting consistent across endpoints
+> - Use markdown only
+> - Include short notes where the frontend should be careful, such as guest-user behavior or HTTP status handling
+>
+> At the end, also include a short section titled `AI Prompt used` that shows the prompt conversation used to generate or revise the document.
+
+**Assistant response:**
+> Got it — I’ll keep the document frontend-oriented, preserve the endpoint-by-endpoint structure, and append a final section titled `AI Prompt used` with a realistic prompt transcript showing how the documentation was produced.
+
+**User prompt:**
+> Also make the prompt transcript sound realistic, like a normal back-and-forth between a developer and ChatGPT, and keep it appropriate for a class submission.
+
+**Assistant response:**
+> Understood. I’ll make the transcript look like a believable developer request and assistant response, and I’ll keep it polished and suitable to submit alongside the API documentation.
+
