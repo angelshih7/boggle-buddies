@@ -5,7 +5,6 @@ import com.example.Boggle.Model.Tables.GameStatus;
 import com.example.Boggle.Model.Tables.User;
 import com.example.Boggle.repository.FoundWordRepository;
 import com.example.Boggle.repository.GameRepository;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -63,13 +62,14 @@ class GameScoreServiceTest {
      *  - winnerPlayerId = 1
      */
     @Test
-    @DisplayName("Compute totals returns correct scores and winner when player one wins")
     void computeTotalsReturnsCorrectScoresAndWinnerWhenPlayerOneWins() {
         User player1 = new User("p1", "p1@test.com", "hash");
         User player2 = new User("p2", "p2@test.com", "hash");
         Game game = new Game();
         game.setPlayer1(player1);
         game.setPlayer2(player2);
+        game.setStatus(GameStatus.IN_PROGRESS);
+
 
         setPrivateId(player1, 1);
         setPrivateId(player2, 2);
@@ -81,6 +81,8 @@ class GameScoreServiceTest {
 
         GameScoreService.Totals totals = gameScoreService.computeTotals(10);
 
+        assertEquals(10, totals.gameId);
+        assertEquals("IN_PROGRESS", totals.status);
         assertEquals(1, totals.player1Id);
         assertEquals(2, totals.player2Id);
         assertEquals(8, totals.player1Points);
@@ -99,13 +101,14 @@ class GameScoreServiceTest {
      * as the winner.
      */
     @Test
-    @DisplayName("Finish game sets status, finish time, and winner")
     void finishGameSetsStatusFinishedAndWinner() {
         User player1 = new User("p1", "p1@test.com", "hash");
         User player2 = new User("p2", "p2@test.com", "hash");
         Game game = new Game();
         game.setPlayer1(player1);
         game.setPlayer2(player2);
+        game.setStatus(GameStatus.IN_PROGRESS);
+
 
         setPrivateId(player1, 1);
         setPrivateId(player2, 2);
