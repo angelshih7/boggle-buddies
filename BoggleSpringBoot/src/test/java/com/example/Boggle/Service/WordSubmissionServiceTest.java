@@ -1,16 +1,11 @@
 package com.example.Boggle.Service;
 
-import com.example.Boggle.Model.Tables.Board;
-import com.example.Boggle.Model.Tables.Dictionary;
-import com.example.Boggle.Model.Tables.FoundWord;
-import com.example.Boggle.Model.Tables.Game;
-import com.example.Boggle.Model.Tables.User;
+import com.example.Boggle.Model.Tables.*;
 import com.example.Boggle.repository.DictionaryRepository;
 import com.example.Boggle.repository.FoundWordRepository;
 import com.example.Boggle.repository.GameRepository;
 import com.example.Boggle.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 
@@ -131,6 +127,8 @@ class WordSubmissionServiceTest {
         game.setPlayer1(player1);
         game.setPlayer2(player2);
         game.setBoard(board);
+        game.setStatus(GameStatus.IN_PROGRESS);
+
     }
 
     /**
@@ -144,7 +142,6 @@ class WordSubmissionServiceTest {
      *  - no FoundWord entity is saved
      */
     @Test
-    @DisplayName("Reject word not found in dictionary")
     void submitWordRejectsWordNotInDictionary() {
         when(gameRepository.findById(100)).thenReturn(Optional.of(game));
         when(userRepository.findById(1)).thenReturn(Optional.of(player1));
@@ -153,7 +150,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cow");
 
         assertFalse(result.accepted);
-        assertEquals("NOT_IN_DICTIONARY", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.NOT_IN_DICTIONARY, result.reason);
         assertEquals("COW", result.normalizedWord);
         verify(foundWordRepository, never()).save(any());
     }
@@ -170,7 +167,6 @@ class WordSubmissionServiceTest {
      *  - no save operation occurs
      */
     @Test
-    @DisplayName("Reject duplicate word for same player in same game")
     void submitWordRejectsDuplicateWordForSamePlayerInSameGame() {
         Dictionary dictionary = mock(Dictionary.class);
         when(dictionary.getId()).thenReturn(77);
@@ -183,7 +179,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cat");
 
         assertFalse(result.accepted);
-        assertEquals("DUPLICATE", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.DUPLICATE, result.reason);
         verify(foundWordRepository, never()).save(any());
     }
 
@@ -202,7 +198,6 @@ class WordSubmissionServiceTest {
      *  - FoundWord is persisted with correct relationships
      */
     @Test
-    @DisplayName("Accept valid word and save FoundWord")
     void submitWordAcceptsValidWordAndSavesFoundWord() {
         Dictionary dictionary = mock(Dictionary.class);
         when(dictionary.getId()).thenReturn(88);
@@ -217,13 +212,12 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cat");
 
         assertTrue(result.accepted);
-        assertEquals("OK", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.OK, result.reason);
         assertEquals("CAT", result.normalizedWord);
         assertEquals(2, result.points);
 
         ArgumentCaptor<FoundWord> captor = ArgumentCaptor.forClass(FoundWord.class);
         verify(foundWordRepository).save(captor.capture());
-
         FoundWord saved = captor.getValue();
         assertEquals(game, saved.getGame());
         assertEquals(player1, saved.getPlayer());
@@ -248,7 +242,6 @@ class WordSubmissionServiceTest {
      *  - reason = DUPLICATE
      */
     @Test
-    @DisplayName("Return duplicate when save hits unique constraint race condition")
     void submitWordReturnsDuplicateWhenSaveHitsUniqueConstraintRaceCondition() {
         Dictionary dictionary = mock(Dictionary.class);
         when(dictionary.getId()).thenReturn(99);
@@ -258,14 +251,12 @@ class WordSubmissionServiceTest {
         when(userRepository.getReferenceById(1)).thenReturn(player1);
         when(dictionaryRepository.findByWord("DOG")).thenReturn(Optional.of(dictionary));
         when(foundWordRepository.existsByGame_IdAndPlayer_IdAndDictionaryWord_Id(100, 1, 99)).thenReturn(false);
-
-        doThrow(new DataIntegrityViolationException("duplicate"))
-                .when(foundWordRepository).save(any());
+        doThrow(new DataIntegrityViolationException("duplicate")).when(foundWordRepository).save(any());
 
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "dog");
 
         assertFalse(result.accepted);
-        assertEquals("DUPLICATE", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.DUPLICATE, result.reason);
     }
 
     /**
@@ -277,7 +268,6 @@ class WordSubmissionServiceTest {
      *  - reason = NOT_ON_BOARD
      */
     @Test
-    @DisplayName("Reject word that is in dictionary but not on board")
     void submitWordRejectsWordThatIsNotOnBoard() {
         Dictionary dictionary = mock(Dictionary.class);
 
@@ -288,7 +278,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cow");
 
         assertFalse(result.accepted);
-        assertEquals("NOT_ON_BOARD", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.NOT_ON_BOARD, result.reason);
     }
 
     /**
@@ -300,7 +290,6 @@ class WordSubmissionServiceTest {
      *  - reason = PLAYER_NOT_IN_GAME
      */
     @Test
-    @DisplayName("Reject submission from player not in game")
     void submitWordRejectsPlayerNotInGame() {
         User outsider = new User("outsider", "out@test.com", "hash");
         setPrivateId(outsider, 99);
@@ -311,7 +300,7 @@ class WordSubmissionServiceTest {
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 99, "cat");
 
         assertFalse(result.accepted);
-        assertEquals("PLAYER_NOT_IN_GAME", result.reason);
+        assertEquals(WordSubmissionService.SubmissionReason.PLAYER_NOT_IN_GAME, result.reason);
     }
 
     /**
