@@ -13,35 +13,104 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.junit.jupiter.api.DisplayName;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for WordSubmissionService.
+ *
+ * These tests verify the full word-submission workflow for a Boggle game.
+ * The service is responsible for validating whether a submitted word:
+ *
+ *  - belongs to an existing game
+ *  - is submitted by a valid player in that game
+ *  - exists in the dictionary
+ *  - appears on the current board
+ *  - has not already been submitted by the same player in the same game
+ *  - can be safely saved without violating database uniqueness constraints
+ *
+ * Test coverage includes both successful submissions and several rejection paths.
+ * Mock repositories are used so that service logic can be tested in isolation.
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Word Submission Service Tests")
 class WordSubmissionServiceTest {
 
+    /**
+     * Repository used to load game state for submissions.
+     */
     @Mock
     private GameRepository gameRepository;
 
+    /**
+     * Repository used to load and validate the submitting user.
+     */
     @Mock
     private UserRepository userRepository;
 
+    /**
+     * Repository used to confirm whether a word exists in the dictionary.
+     */
     @Mock
     private DictionaryRepository dictionaryRepository;
 
+    /**
+     * Repository used to detect duplicates and persist accepted words.
+     */
     @Mock
     private FoundWordRepository foundWordRepository;
 
+    /**
+     * Service under test.
+     * Mockito injects the mocked dependencies above into this service.
+     */
     @InjectMocks
     private WordSubmissionService wordSubmissionService;
 
+    /**
+     * Test player one, used as a valid participant in the game.
+     */
     private User player1;
+
+    /**
+     * Test player two, used as the second participant in the game.
+     */
     private User player2;
+
+    /**
+     * Shared game object used by most tests.
+     */
     private Game game;
+
+    /**
+     * Shared board used by most tests.
+     * The board layout is:
+     *
+     * C A T S
+     * D O G E
+     * B I R D
+     * F I S H
+     *
+     * This allows valid words such as CAT and DOG,
+     * while rejecting words like COW as not being on the board.
+     */
     private Board board;
 
+    /**
+     * Creates a consistent test environment before each test.
+     *
+     * This setup:
+     *  - creates two users
+     *  - assigns them IDs using reflection
+     *  - creates a board string
+     *  - creates a game containing both players and the board
+     *
+     * Using @BeforeEach keeps the tests short and avoids repeated setup code.
+     */
     @BeforeEach
     void setUp() {
         player1 = new User("p1", "p1@test.com", "hash");
@@ -62,6 +131,16 @@ class WordSubmissionServiceTest {
 
     }
 
+    /**
+     * Verifies that a submitted word is rejected when it does not exist
+     * in the dictionary, even before board validation or saving occurs.
+     *
+     * Expected result:
+     *  - accepted = false
+     *  - reason = NOT_IN_DICTIONARY
+     *  - normalized word is uppercase
+     *  - no FoundWord entity is saved
+     */
     @Test
     void submitWordRejectsWordNotInDictionary() {
         when(gameRepository.findById(100)).thenReturn(Optional.of(game));
@@ -76,6 +155,17 @@ class WordSubmissionServiceTest {
         verify(foundWordRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that a word already submitted by the same player
+     * in the same game is rejected as a duplicate.
+     *
+     * This test confirms that duplicate detection happens before saving.
+     *
+     * Expected result:
+     *  - accepted = false
+     *  - reason = DUPLICATE
+     *  - no save operation occurs
+     */
     @Test
     void submitWordRejectsDuplicateWordForSamePlayerInSameGame() {
         Dictionary dictionary = mock(Dictionary.class);
@@ -93,6 +183,20 @@ class WordSubmissionServiceTest {
         verify(foundWordRepository, never()).save(any());
     }
 
+    /**
+     * Verifies that a valid dictionary word appearing on the board
+     * is accepted and saved correctly.
+     *
+     * This test also captures the saved FoundWord entity to verify that
+     * the service stored the correct game, player, and dictionary entry.
+     *
+     * Expected result:
+     *  - accepted = true
+     *  - reason = OK
+     *  - normalized word = CAT
+     *  - points reflect dictionary metadata
+     *  - FoundWord is persisted with correct relationships
+     */
     @Test
     void submitWordAcceptsValidWordAndSavesFoundWord() {
         Dictionary dictionary = mock(Dictionary.class);
@@ -120,6 +224,23 @@ class WordSubmissionServiceTest {
         assertEquals(dictionary, saved.getDictionaryWord());
     }
 
+    /**
+     * Verifies that even if the duplicate pre-check says the word is not yet present,
+     * the service still handles a database-level duplicate safely.
+     *
+     * Why this matters:
+     * Two requests could arrive at almost the same time. Both might pass the
+     * "exists" check, but one of them could fail during save because of a
+     * unique constraint in the database. This is a race condition.
+     *
+     * In that case, the service should not crash or return a generic failure.
+     * Instead, it should translate that database exception into the same
+     * DUPLICATE response the user would expect.
+     *
+     * Expected result:
+     *  - accepted = false
+     *  - reason = DUPLICATE
+     */
     @Test
     void submitWordReturnsDuplicateWhenSaveHitsUniqueConstraintRaceCondition() {
         Dictionary dictionary = mock(Dictionary.class);
@@ -138,6 +259,14 @@ class WordSubmissionServiceTest {
         assertEquals(WordSubmissionService.SubmissionReason.DUPLICATE, result.reason);
     }
 
+    /**
+     * Verifies that even dictionary-valid words are rejected if they do not
+     * appear on the current board layout.
+     *
+     * Expected result:
+     *  - accepted = false
+     *  - reason = NOT_ON_BOARD
+     */
     @Test
     void submitWordRejectsWordThatIsNotOnBoard() {
         Dictionary dictionary = mock(Dictionary.class);
@@ -152,6 +281,14 @@ class WordSubmissionServiceTest {
         assertEquals(WordSubmissionService.SubmissionReason.NOT_ON_BOARD, result.reason);
     }
 
+    /**
+     * Verifies that a user who is not one of the game's participants
+     * cannot submit words for that game.
+     *
+     * Expected result:
+     *  - accepted = false
+     *  - reason = PLAYER_NOT_IN_GAME
+     */
     @Test
     void submitWordRejectsPlayerNotInGame() {
         User outsider = new User("outsider", "out@test.com", "hash");
@@ -166,6 +303,14 @@ class WordSubmissionServiceTest {
         assertEquals(WordSubmissionService.SubmissionReason.PLAYER_NOT_IN_GAME, result.reason);
     }
 
+    /**
+     * Helper method used to assign IDs to User entities in tests.
+     *
+     * Since IDs are normally generated by JPA and may not have public setters,
+     * reflection is used here to simulate persisted entities with known IDs.
+     *
+     * This makes repository and service tests easier to control and verify.
+     */
     private static void setPrivateId(User user, Integer id) {
         try {
             var field = User.class.getDeclaredField("id");
