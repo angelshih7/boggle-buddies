@@ -521,4 +521,152 @@ public class UnitAPIGameTest {
         assertEquals(totals, response);
         verify(gameScoreService).finishGame(44);
     }
+
+    /**
+     * Verifies that the boardString returned by getBoard has exactly 4 newline-separated
+     * rows each containing 4 characters — the format GamePage splits to build its 16 tiles.
+     */
+    @Test
+    void testGetBoardStringParsesIntoSixteenTiles() {
+        Board board = new Board();
+        board.setBoardId("board-parse");
+        board.setBoardString("ABCD\nEFGH\nIJKL\nMNOP");
+
+        when(gameService.getBoard(10)).thenReturn(board);
+
+        GameController.BoardResponse response = gameController.getBoard(10);
+
+        String[] rows = response.boardString.split("\n");
+        assertEquals(4, rows.length, "boardString must have exactly 4 rows");
+        for (String row : rows) {
+            assertEquals(4, row.length(), "each row must have exactly 4 characters");
+        }
+
+        int totalTiles = 0;
+        for (String row : rows) totalTiles += row.length();
+        assertEquals(16, totalTiles, "board must contain exactly 16 tiles total");
+    }
+
+    /**
+     * Verifies that an accepted word submission returns points greater than zero —
+     * confirming the score increment path in GamePage will receive a valid value.
+     */
+    @Test
+    void testSubmitWordAcceptedReturnsPositivePoints() {
+        GameController.SubmitWordRequest req = new GameController.SubmitWordRequest();
+        req.playerId = 1;
+        req.word = "cat";
+
+        WordSubmissionService.Result result = new WordSubmissionService.Result();
+        result.accepted = true;
+        result.reason = WordSubmissionService.SubmissionReason.OK;
+        result.normalizedWord = "CAT";
+        result.points = 3;
+
+        when(wordSubmissionService.submitWord(5, 1, "cat")).thenReturn(result);
+
+        GameController.SubmitWordResponse response = gameController.submitWord(5, req);
+
+        assertTrue(response.accepted);
+        assertEquals("OK", response.reason);
+        assertTrue(response.points > 0, "accepted word must return points > 0 for GamePage score update");
+    }
+
+    /**
+     * Verifies that submitting a word shorter than the minimum length returns
+     * accepted=false with reason TOO_SHORT — matching the feedback label GamePage displays.
+     */
+    @Test
+    void testSubmitWordRejectedTooShort() {
+        GameController.SubmitWordRequest req = new GameController.SubmitWordRequest();
+        req.playerId = 1;
+        req.word = "ab";
+
+        WordSubmissionService.Result result = new WordSubmissionService.Result();
+        result.accepted = false;
+        result.reason = WordSubmissionService.SubmissionReason.TOO_SHORT;
+        result.normalizedWord = "AB";
+        result.points = 0;
+
+        when(wordSubmissionService.submitWord(5, 1, "ab")).thenReturn(result);
+
+        GameController.SubmitWordResponse response = gameController.submitWord(5, req);
+
+        assertFalse(response.accepted);
+        assertEquals("TOO_SHORT", response.reason);
+    }
+
+    /**
+     * Verifies that submitting a word to a non-existent game returns
+     * accepted=false with reason GAME_NOT_FOUND — matching the feedback label GamePage displays.
+     */
+    @Test
+    void testSubmitWordRejectedGameNotFound() {
+        GameController.SubmitWordRequest req = new GameController.SubmitWordRequest();
+        req.playerId = 1;
+        req.word = "cat";
+
+        WordSubmissionService.Result result = new WordSubmissionService.Result();
+        result.accepted = false;
+        result.reason = WordSubmissionService.SubmissionReason.GAME_NOT_FOUND;
+        result.normalizedWord = "CAT";
+        result.points = 0;
+
+        when(wordSubmissionService.submitWord(999, 1, "cat")).thenReturn(result);
+
+        GameController.SubmitWordResponse response = gameController.submitWord(999, req);
+
+        assertFalse(response.accepted);
+        assertEquals("GAME_NOT_FOUND", response.reason);
+    }
+
+    /**
+     * Verifies that submitting a word as a player not in the game returns
+     * accepted=false with reason PLAYER_NOT_IN_GAME — matching the feedback label GamePage displays.
+     */
+    @Test
+    void testSubmitWordRejectedPlayerNotInGame() {
+        GameController.SubmitWordRequest req = new GameController.SubmitWordRequest();
+        req.playerId = 99;
+        req.word = "cat";
+
+        WordSubmissionService.Result result = new WordSubmissionService.Result();
+        result.accepted = false;
+        result.reason = WordSubmissionService.SubmissionReason.PLAYER_NOT_IN_GAME;
+        result.normalizedWord = "CAT";
+        result.points = 0;
+
+        when(wordSubmissionService.submitWord(5, 99, "cat")).thenReturn(result);
+
+        GameController.SubmitWordResponse response = gameController.submitWord(5, req);
+
+        assertFalse(response.accepted);
+        assertEquals("PLAYER_NOT_IN_GAME", response.reason);
+    }
+
+    /**
+     * Verifies that getScore returns a Totals object with the correct player point values —
+     * confirming GamePage's score display will receive the right data from the backend.
+     */
+    @Test
+    void testGetScoreReturnsPlayerPointTotals() {
+        GameScoreService.Totals totals = new GameScoreService.Totals();
+        totals.gameId = 7;
+        totals.status = "IN_PROGRESS";
+        totals.player1Id = 1;
+        totals.player2Id = 2;
+        totals.player1Points = 12;
+        totals.player2Points = 8;
+        totals.winnerPlayerId = null;
+
+        when(gameScoreService.computeTotals(7)).thenReturn(totals);
+
+        GameScoreService.Totals response = gameController.getScore(7);
+
+        assertEquals(7, response.gameId);
+        assertEquals(12, response.player1Points);
+        assertEquals(8, response.player2Points);
+        assertNull(response.winnerPlayerId);
+        assertEquals("IN_PROGRESS", response.status);
+    }
 }
