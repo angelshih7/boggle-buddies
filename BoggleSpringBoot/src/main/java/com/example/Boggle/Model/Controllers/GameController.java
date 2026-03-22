@@ -1,22 +1,15 @@
 package com.example.Boggle.Model.Controllers;
 import com.example.Boggle.Model.Tables.Board;
 import com.example.Boggle.Model.Tables.Game;
-import com.example.Boggle.Model.Tables.GameStatus;
-import com.example.Boggle.Model.Tables.User;
 import com.example.Boggle.Service.GameScoreService;
 import com.example.Boggle.Service.GameService;
 import com.example.Boggle.Service.WordSubmissionService;
-import com.example.Boggle.Session.SubmitWordRequest;
-import com.example.Boggle.repository.BoardRepository;
-import com.example.Boggle.repository.FoundWordRepository;
-import com.example.Boggle.repository.GameRepository;
-import com.example.Boggle.repository.UserRepository;
-import com.example.Boggle.util.ShuffleUtil;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -31,7 +24,6 @@ import org.springframework.http.HttpStatus;
 @RestController
 @RequestMapping("/api")
 public class GameController{
-
 
     private final GameService gameService;
     private final GameScoreService gameScoreService;
@@ -161,6 +153,19 @@ public class GameController{
     }
 
     /**
+     * Used to return a list of boards that are currently waiting for a second player
+     */
+    public static class ListWaitingResponse{
+        public List<Integer> gameIds;
+
+        public static ListWaitingResponse ListWaitingResponseDTO(ArrayList<Integer> boardIds) {
+            ListWaitingResponse lwr = new ListWaitingResponse();
+            lwr.gameIds = boardIds;
+            return lwr;
+        }
+    }
+
+    /**
      * Response body containing board information.
      */
     public static class BoardResponse{
@@ -276,6 +281,21 @@ public class GameController{
 
         Game game = gameService.joinGame(gameId, request.playerId);
         return GameResponse.GameSummaryDTO(game);
+    }
+
+    /**
+     * Used to return a list of boards that are currently waiting for a second player
+     *
+     * @return a list of IDs for all games that are currently in 'waiting' status
+     */
+    @GetMapping("/game/list-waiting")
+    public ListWaitingResponse listWaitingGames() {
+        List<Game> waitingGames = gameService.getWaitingGames();
+        ArrayList<Integer> gameIds = new ArrayList<>();
+        for (Game waitingGame : waitingGames) {
+            gameIds.add(waitingGame.getId());
+        }
+        return ListWaitingResponse.ListWaitingResponseDTO(gameIds);
     }
 
     /**
