@@ -1,4 +1,5 @@
 package com.example.Boggle.Model.Controllers;
+import com.example.Boggle.Model.Tables.Dictionary;
 import com.example.Boggle.repository.DictionaryRepository;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +34,10 @@ public class DictionaryControllerTest {
      */
     @Test
     void testGetAllWords() throws Exception {
+        Dictionary d = new Dictionary();
+        d.setWord("cat");
+        d.setPointValue(1);
+        dictionaryRepository.save(d);
         HttpClient client = HttpClient.newHttpClient();
 
         HttpRequest request = HttpRequest.newBuilder()

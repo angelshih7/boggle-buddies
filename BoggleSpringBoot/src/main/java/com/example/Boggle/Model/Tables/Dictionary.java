@@ -56,4 +56,20 @@ public class Dictionary {
     public int getPointValue() {
         return pointValue;
     }
+
+    /**
+     * Set word to dictionary meant for testing purposes
+     * @param word that use wants to save.
+     */
+    public void setWord(String word) {
+        this.word = word;
+    }
+
+    /**
+     * Set point for word to dictionary meant for testing purposes
+     * @param points the amount of points wanted for a workd
+     */
+    public void setPointValue(int points) {
+        this.pointValue = points;
+    }
 }

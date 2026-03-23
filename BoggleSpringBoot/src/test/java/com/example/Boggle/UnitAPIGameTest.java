@@ -33,6 +33,7 @@ import static org.mockito.Mockito.*;
  * These test verify game creation, multiplayer joining,
  * and board retrieval behavior using mocked repositories.
  */
+@MockitoBean
 public class UnitAPIGameTest {
 
     private GameController gameController;
