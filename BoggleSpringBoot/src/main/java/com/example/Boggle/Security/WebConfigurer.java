@@ -20,7 +20,7 @@ public class WebConfigurer implements WebMvcConfigurer {
                 // Allow frontend port
                 .allowedOrigins("http://localhost:5173")
                 // Allow get, post, and put requests
-                .allowedMethods("GET", "POST", "PUT")
+                .allowedMethods("GET", "POST", "PUT","OPTIONS")
                 // Allow all headers
                 .allowedHeaders("*");
     }
