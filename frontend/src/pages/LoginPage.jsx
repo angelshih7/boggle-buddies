@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import "./LoginPage.css";
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/; // Allows only letters, numbers, and underscores
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_USERNAME_LENGTH = 5;
 const MIN_PASSWORD_LENGTH = 7;
 const STORAGE_KEY = "bbUser";
@@ -40,8 +41,10 @@ export default function LoginPage() {
             alert(`Username should be at least ${MIN_USERNAME_LENGTH} characters.`);
             return;
         }
-        // TODO: basic checks for email like @, .com ...
-
+        if (!EMAIL_REGEX.test(emailInput)) {
+            alert("Invalid email");
+            return;
+        }
         if (password.length < MIN_PASSWORD_LENGTH) {
             alert(`Password should be at least ${MIN_PASSWORD_LENGTH} characters.`);
             return;
@@ -60,12 +63,10 @@ export default function LoginPage() {
             })
         }).then(res => {
             if (res.status === 401) {
-                // TODO: change from alerts to inline feedback
                 alert("Invalid username or password!");
                 return null;
             }
             if (res.status !== 200) {
-                // TODO: implement better error response for unknown errors
                 alert("Something went wrong");
                 return null;
             }
