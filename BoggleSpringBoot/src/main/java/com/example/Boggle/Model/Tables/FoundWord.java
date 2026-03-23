@@ -2,6 +2,7 @@ package com.example.Boggle.Model.Tables;
 
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -43,7 +44,8 @@ public class FoundWord {
     @JoinColumn(name="dictionary_word_id", foreignKey=@ForeignKey(name="fk_found_dictionary"))
     private Dictionary dictionaryWord;
 
-    @Column(name="found_at",nullable = false,insertable = false,updatable = false)
+    @CreationTimestamp
+    @Column(name="found_at", nullable = false, updatable = false)
     private LocalDateTime foundAt;
 
     /**
