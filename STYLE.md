@@ -216,6 +216,12 @@ All branches must follow a consistent naming format to keep the repository organ
 - Write clear, descriptive commit messages ("added feature")
 - Reference issue numbers when applicable
 
+**Commit Structure Guidelines:**
+- Create **one commit per file changed or added** whenever possible
+- If a single change is large (e.g., a long method or full feature implementation), it is acceptable to group it into one commit
+- Avoid combining unrelated changes into a single commit
+- Keep commits small and focused for easier code review and debugging
+
 ### Before Committing
 **Required checklist:**
 - [ ] Run IntelliJ Code Cleanup (`Ctrl + Alt + L` / `Cmd + Option + L`)
@@ -239,4 +245,4 @@ Ensure your IntelliJ is configured with:
 - **Tools > Actions on Save**: Enable "Reformat code" (optional but recommended)
 
 ---
-*Last Updated: Sprint 1*
+*Last Updated: Sprint 2*
