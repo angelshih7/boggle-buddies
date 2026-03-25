@@ -1,9 +1,17 @@
-import com.example.Boggle.Model.Tables.FoundWord;
 package com.example.Boggle.Model.Controllers;
-import static org.springframework.http.HttpStatus.*;
-import org.springframework.http.HttpStatus;
+import com.example.Boggle.Model.Tables.FoundWord;
+import com.example.Boggle.repository.FoundWordRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * DTO for sending found word data to the frontend.
+ */
+record FoundWordResponse(String word, Integer points, LocalDateTime foundAt) {}
 
 @RestController
 @RequestMapping("/api/game")
@@ -21,8 +29,7 @@ public class FoundWordController {
             @PathVariable Integer gameId,
             @PathVariable Integer playerId) {
 
-        List<FoundWord> foundWords = foundWordRepository.findByGame_IdAndPlayer_Id(gameId, playerId);
-
+        List<FoundWord> foundWords = foundWordRepository.findByGame_IdAndPlayer_IdOrderByFoundAtDesc(gameId, playerId);
         // Map the entities to our lightweight DTO
         List<FoundWordResponse> response = foundWords.stream()
                 .map(fw -> new FoundWordResponse(

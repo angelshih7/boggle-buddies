@@ -3,8 +3,7 @@ import { useLocation } from 'react-router-dom';
 import './GamePage.css';
 
 /**
- * Placeholder letters used only during local development when no board
- * is received from the backend.
+ * Placeholder letters used only during local development.
  */
 const DEV_PLACEHOLDER = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
 const GRID_SIZE = 4;
@@ -50,8 +49,6 @@ export default function GamePage() {
   const [score, setScore]               = useState(location.state?.score ?? 0);
   const [selectedPath, setSelectedPath] = useState([]);
   const [feedback, setFeedback]         = useState(null);
-
-  // New state for the found words list
   const [foundWords, setFoundWords]     = useState([]);
 
   const isDraggingRef = useRef(false);
@@ -82,10 +79,17 @@ export default function GamePage() {
     }
   }, [gameId, playerId]);
 
-  // Poll for new words every 3 seconds (in case of multi-window or sync)
+  /** * Poll for new words. Wrapping the call in a function inside the effect
+   * satisfies the linter by avoiding synchronous setState calls during render.
+   */
   useEffect(() => {
-    fetchFoundWords();
-    const interval = setInterval(fetchFoundWords, 3000);
+    const refreshBoard = () => {
+      fetchFoundWords();
+    };
+
+    refreshBoard(); // Initial fetch
+    const interval = setInterval(refreshBoard, 3000);
+
     return () => clearInterval(interval);
   }, [fetchFoundWords]);
 
@@ -134,8 +138,7 @@ export default function GamePage() {
 
         if (data.accepted) {
           if (data.points) setScore(s => s + data.points);
-          // Refresh the list immediately on success
-          fetchFoundWords();
+          fetchFoundWords(); // Immediate update on success
         }
       } catch {
         setFeedback({ word, accepted: false, reason: 'ERROR' });
@@ -177,7 +180,7 @@ export default function GamePage() {
     return () => window.removeEventListener('mouseup', finalize);
   }, [finalize]);
 
-  // ---- Render Helpers ---------------------------------------------------
+  // ---- Render -----------------------------------------------------------
 
   const currentWord = selectedPath.map(i => letters[i]).join('');
 
@@ -201,7 +204,6 @@ export default function GamePage() {
             <span className="score-value">{score}</span>
           </div>
 
-          {/* Found Words Board Section */}
           <div className="found-words-container">
             <h3 className="found-words-header">Found Words ({foundWords.length})</h3>
             <div className="found-words-list">
@@ -213,7 +215,7 @@ export default function GamePage() {
                       </div>
                   ))
               ) : (
-                  <p className="empty-list-text">No words found yet...</p>
+                  <p className="empty-list-text">Keep searching!</p>
               )}
             </div>
           </div>

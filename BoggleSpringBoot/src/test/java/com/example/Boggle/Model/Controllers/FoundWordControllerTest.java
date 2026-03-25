@@ -35,16 +35,17 @@ public class FoundWordControllerTest {
 
     @Test
     void testGetPlayerFoundWords() throws Exception {
-        // 1. Setup User (with mandatory email/password for your Entity)
-        User player = new User("TestUser", "test@example.com", "hashed_pw");
+        // 1. Setup User - Entity requires username, email, and password
+        User player = new User("alice", "alice@test.com", "password123");
         player = userRepository.save(player);
 
-        // 2. Setup Board (Game requires a non-null board)
+        // 2. Setup Board
         Board board = new Board();
-        // Set any required fields for your Board entity here
+        board.setBoardId("board-1"); // Matches your Board entity fields
+        board.setBoardString("ABCD\nEFGH\nIJKL\nMNOP");
         board = boardRepository.save(board);
 
-        // 3. Setup Game
+        // 3. Setup Game - Using the constructor (player1, player2, board)
         Game game = new Game(player, null, board);
         game.setStatus(GameStatus.IN_PROGRESS);
         game = gameRepository.save(game);
@@ -62,7 +63,7 @@ public class FoundWordControllerTest {
         foundWord.setDictionaryWord(word);
         foundWordRepository.save(foundWord);
 
-        // 6. Test the API
+        // 6. Test the API via HttpClient
         HttpClient client = HttpClient.newHttpClient();
         String url = String.format("http://localhost:%d/api/game/%d/player/%d/words",
                 port, game.getId(), player.getId());
@@ -74,7 +75,7 @@ public class FoundWordControllerTest {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        //Assertions
+        // Assertions
         assertEquals(200, response.statusCode());
         assertTrue(response.body().contains("REACT"));
         assertTrue(response.body().contains("\"points\":2"));
