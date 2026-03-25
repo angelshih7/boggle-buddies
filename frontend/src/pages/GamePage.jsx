@@ -88,7 +88,7 @@ export default function GamePage() {
     };
 
     refreshBoard(); // Initial fetch
-    const interval = setInterval(refreshBoard, 3000);
+    const interval = setInterval(refreshBoard, 1000);
 
     return () => clearInterval(interval);
   }, [fetchFoundWords]);
