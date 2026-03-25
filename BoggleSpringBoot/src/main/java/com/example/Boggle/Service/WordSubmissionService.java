@@ -173,8 +173,7 @@ public class WordSubmissionService{
             return out;
         }
 
-        Dictionary dict = dictionaryRepository.findByWord(word).orElse(null);
-
+        Dictionary dict = dictionaryRepository.findByWordIgnoreCase(word).orElse(null);
         //checks that word exist in the dictionary
         if(dict==null){
             out.accepted = false;
