@@ -32,3 +32,11 @@ lint-frontend:
     - cd frontend
     - npm ci
     - npm run lint
+
+test-frontend:
+  image: node:20
+  stage: test
+  script:
+    - cd frontend
+    - npm ci
+    - npm run test -- --run
