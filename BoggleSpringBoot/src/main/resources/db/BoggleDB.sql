@@ -87,7 +87,7 @@ CREATE TABLE `found_words` (
                                `player_id` int NOT NULL,
                                `game_id` int NOT NULL,
                                `dictionary_word_id` int NOT NULL,
-                               PRIMARY KEY (`id`),
+                               `found_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,                               PRIMARY KEY (`id`),
                                UNIQUE KEY `unique_word_per_player_per_game` (`player_id`,`game_id`,`dictionary_word_id`),
                                KEY `fk_found_game` (`game_id`),
                                KEY `fk_found_dictionary` (`dictionary_word_id`),
