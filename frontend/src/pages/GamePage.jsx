@@ -3,13 +3,11 @@ import { useLocation } from 'react-router-dom';
 import './GamePage.css';
 
 /**
- * Placeholder letters used only during local development when no board
- * is received from the backend. Shown while the board fetch is in flight
- * or when gameId is absent (standalone preview).
+ * Placeholder letters used only during local development.
  */
 const DEV_PLACEHOLDER = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
 const GRID_SIZE = 4;
-const MIN_WORD_LENGTH = 3; // Boggle minimum; also enforced by WordSubmissionService
+const MIN_WORD_LENGTH = 3;
 
 // --- Adjacency helpers -------------------------------------------------
 
@@ -17,20 +15,12 @@ function tileToRowCol(index) {
   return { row: Math.floor(index / GRID_SIZE), col: index % GRID_SIZE };
 }
 
-/**
- * Two tiles are adjacent if they share an edge or corner on the 4×4 grid.
- *
- * @param {number} a
- * @param {number} b
- * @returns {boolean}
- */
 function isAdjacent(a, b) {
   const { row: r1, col: c1 } = tileToRowCol(a);
   const { row: r2, col: c2 } = tileToRowCol(b);
   return a !== b && Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1;
 }
 
-/** rejection reason returned by WordSubmissionService */
 const REASON_LABEL = {
   TOO_SHORT:            'too short (min 3 letters)',
   NOT_IN_DICTIONARY:    'not a word',
@@ -51,44 +41,60 @@ const REASON_LABEL = {
 export default function GamePage() {
   const location   = useLocation();
   const playerName = location.state?.playerName ?? 'Guest';
-  /**
-   * gameId / playerId are needed to call WordSubmissionService via the REST API.
-   * POST /api/game/{gameId}/submit-word delegates to WordSubmissionService
-   * in GameController.
-   */
   const gameId     = location.state?.gameId   ?? null;
   const playerId   = location.state?.playerId ?? null;
 
   const [letters, setLetters]           = useState(location.state?.letters ?? DEV_PLACEHOLDER);
-  const [boardLoading, setBoardLoading] = useState(() => gameId != null);  const [score, setScore]               = useState(location.state?.score ?? 0);
-  const [selectedPath, setSelectedPath] = useState([]); // tile indices in selection order
+  const [boardLoading, setBoardLoading] = useState(() => gameId != null);
+  const [score, setScore]               = useState(location.state?.score ?? 0);
+  const [selectedPath, setSelectedPath] = useState([]);
   const [feedback, setFeedback]         = useState(null);
+  const [foundWords, setFoundWords]     = useState([]);
 
-  // Refs keep event-handler callbacks stable without re-registering listeners.
   const isDraggingRef = useRef(false);
-  const pathRef       = useRef([]);     // mirrors selectedPath, always current
-  const lettersRef = useRef(letters);
+  const pathRef       = useRef([]);
+  const lettersRef    = useRef(letters);
+
   useEffect(() => {
     lettersRef.current = letters;
   }, [letters]);
 
-  /**
-   * Update render state and the ref together.
-   *
-   * @param {number[]} newPath
-   */
   const updatePath = (newPath) => {
     pathRef.current = newPath;
     setSelectedPath([...newPath]);
   };
 
+  // ---- Found Word Fetching Logic ---------------------------------------
+
+  const fetchFoundWords = useCallback(async () => {
+    if (gameId == null || playerId == null) return;
+    try {
+      const res = await fetch(`/api/game/${gameId}/player/${playerId}/words`);
+      if (res.ok) {
+        const data = await res.json();
+        setFoundWords(data);
+      }
+    } catch (err) {
+      console.error("Error fetching found words:", err);
+    }
+  }, [gameId, playerId]);
+
+  /** * Poll for new words. Wrapping the call in a function inside the effect
+   * satisfies the linter by avoiding synchronous setState calls during render.
+   */
+  useEffect(() => {
+    const refreshBoard = () => {
+      fetchFoundWords();
+    };
+
+    refreshBoard(); // Initial fetch
+    const interval = setInterval(refreshBoard, 1000);
+
+    return () => clearInterval(interval);
+  }, [fetchFoundWords]);
+
   // ---- Drag logic -------------------------------------------------------
 
-  /**
-   * Called when the pointer enters a tile while dragging.
-   *
-   * @param {number} index
-   */
   const enterTile = useCallback((index) => {
     if (!isDraggingRef.current || index < 0) return;
 
@@ -96,38 +102,24 @@ export default function GamePage() {
     const existingIdx = path.indexOf(index);
 
     if (existingIdx !== -1) {
-      // Cursor returned to a tile already in the chain → undo back to it.
       updatePath(path.slice(0, existingIdx + 1));
       return;
     }
 
-    // Extend chain only if the new tile neighbours the last selected tile.
     if (isAdjacent(path[path.length - 1], index)) {
       updatePath([...path, index]);
     }
-  }, []); // no captured state – reads refs only
+  }, []);
 
-  /**
-   * Called when the pointer presses down on a tile to begin selection.
-   *
-   * @param {number} index
-   */
   const startDrag = useCallback((index) => {
     isDraggingRef.current = true;
     setFeedback(null);
     updatePath([index]);
   }, []);
 
-  // ---- Word submission (delegates to backend) ---------------------------
+  // ---- Word submission --------------------------------------------------
 
-  /**
-   * WordSubmissionService handles: dictionary lookup, board-path validation,
-   * duplicate detection, min-length check, and scoring.
-   *
-   * @param {string} word
-   */
   const submitWord = useCallback(async (word) => {
-    // backend enforces the real rule.
     if (word.length < MIN_WORD_LENGTH) {
       setFeedback({ word, accepted: false, reason: 'TOO_SHORT' });
       return;
@@ -135,67 +127,54 @@ export default function GamePage() {
 
     if (gameId != null && playerId != null) {
       try {
-        // Calls WordSubmissionService.submitWord(gameId, playerId, rawWord)
-        // via GameController POST /api/game/{gameId}/submit-word.
         const res = await fetch(`/api/game/${gameId}/submit-word`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ playerId, word }),
         });
         const data = await res.json();
+
         setFeedback({ word, accepted: data.accepted, reason: data.reason });
-        if (data.accepted && data.points) {
-          setScore(s => s + data.points);
+
+        if (data.accepted) {
+          if (data.points) setScore(s => s + data.points);
+          fetchFoundWords(); // Immediate update on success
         }
       } catch {
         setFeedback({ word, accepted: false, reason: 'ERROR' });
       }
     } else {
-      // No active game session (dev / standalone preview).
       setFeedback({ word, accepted: null, reason: 'DEV_MODE' });
     }
-  }, [gameId, playerId]);
-
-  // ---- Finalize on pointer release -------------------------------------
+  }, [gameId, playerId, fetchFoundWords]);
 
   const finalize = useCallback(() => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
 
     const word = pathRef.current.map(i => lettersRef.current[i]).join('');
-    updatePath([]); // clear highlight immediately
+    updatePath([]);
     submitWord(word);
   }, [submitWord]);
 
-  // ---- Board fetch (GET /api/game/{gameId}/board) -----------------------
+  // ---- Board fetch ------------------------------------------------------
 
   useEffect(() => {
     if (gameId == null) return;
-
     const controller = new AbortController();
 
     fetch(`/api/game/${gameId}/board`, { signal: controller.signal })
         .then(res => res.json())
         .then(data => {
-          //Convert boardString into a flat array of 16 tile letters.
-          //Example backend format:
-          //"ABCD\nEFGH\nIJKL\nMNOP"
           const parsed = data.boardString.split('\n').flatMap(row => [...row]);
-
-          //Only update the board if the parsed result matches the expected size.
           if (parsed.length === 16) setLetters(parsed);
         })
-        .catch(() => {
-          //Network error or aborted request → keep existing letters
-          //(DEV_PLACEHOLDER will remain if the fetch never succeeds).
-        })
+        .catch(() => {})
         .finally(() => setBoardLoading(false));
 
-    //Abort the request if the component unmounts or gameId changes.
     return () => controller.abort();
   }, [gameId]);
 
-  /** Global mouseup so releasing outside the grid still finalizes the word. */
   useEffect(() => {
     window.addEventListener('mouseup', finalize);
     return () => window.removeEventListener('mouseup', finalize);
@@ -208,66 +187,81 @@ export default function GamePage() {
   let feedbackMod = '';
   if (feedback) {
     feedbackMod = feedback.accepted === true  ? 'ok'
-                : feedback.accepted === false ? 'bad'
-                : 'dev';
+        : feedback.accepted === false ? 'bad'
+            : 'dev';
   }
 
   return (
-    <div className="game-page">
-      <aside className="game-sidebar">
-        <div className="player-avatar">
-          {playerName.charAt(0).toUpperCase()}
-        </div>
-        <h2 className="player-name">{playerName}</h2>
-        <div className="score-section">
-          <span className="score-label">Score</span>
-          <span className="score-value">{score}</span>
-        </div>
-      </aside>
+      <div className="game-page">
+        <aside className="game-sidebar">
+          <div className="player-avatar">
+            {playerName.charAt(0).toUpperCase()}
+          </div>
+          <h2 className="player-name">{playerName}</h2>
 
-      <main className="game-main">
-        {/* Live word preview / last-word feedback */}
-        <div className="word-preview">
-          {currentWord
-            ? currentWord
-            : feedback
-              ? (
-                <span className={`word-feedback word-feedback--${feedbackMod}`}>
+          <div className="score-section">
+            <span className="score-label">Score</span>
+            <span className="score-value">{score}</span>
+          </div>
+
+          <div className="found-words-container">
+            <h3 className="found-words-header">Found Words ({foundWords.length})</h3>
+            <div className="found-words-list">
+              {foundWords.length > 0 ? (
+                  foundWords.map((fw, idx) => (
+                      <div key={`${fw.word}-${idx}`} className="found-word-entry">
+                        <span className="found-word-text">{fw.word}</span>
+                        <span className="found-word-pts">+{fw.points}</span>
+                      </div>
+                  ))
+              ) : (
+                  <p className="empty-list-text">Keep searching!</p>
+              )}
+            </div>
+          </div>
+        </aside>
+
+        <main className="game-main">
+          <div className="word-preview">
+            {currentWord
+                ? currentWord
+                : feedback
+                    ? (
+                        <span className={`word-feedback word-feedback--${feedbackMod}`}>
                   {feedback.word}
-                  {feedback.reason in REASON_LABEL && feedback.reason !== 'DEV_MODE'
-                    ? ` — ${REASON_LABEL[feedback.reason]}`
-                    : ''}
+                          {feedback.reason in REASON_LABEL && feedback.reason !== 'DEV_MODE'
+                              ? ` — ${REASON_LABEL[feedback.reason]}`
+                              : ''}
                 </span>
-              )
-              : '\u00A0' /* keep height stable */}
-        </div>
+                    )
+                    : '\u00A0'}
+          </div>
 
-        <div className={`boggle-grid${boardLoading ? ' boggle-grid--loading' : ''}`}>
-          {letters.map((letter, i) => {
-            const isSelected = selectedPath.includes(i);
-            const isFirst    = selectedPath[0] === i;
-            const classes    = [
-              'tile',
-              isSelected ? 'tile--selected' : '',
-              isFirst    ? 'tile--first'    : '',
-            ].filter(Boolean).join(' ');
+          <div className={`boggle-grid${boardLoading ? ' boggle-grid--loading' : ''}`}>
+            {letters.map((letter, i) => {
+              const isSelected = selectedPath.includes(i);
+              const isFirst    = selectedPath[0] === i;
+              const classes    = [
+                'tile',
+                isSelected ? 'tile--selected' : '',
+                isFirst    ? 'tile--first'    : '',
+              ].filter(Boolean).join(' ');
 
-            return (
-              <div
-                key={i}
-                data-tile-index={i}
-                className={classes}
-                onMouseDown={() => startDrag(i)}
-                onMouseEnter={() => enterTile(i)}
-              >
+              return (
+                  <div
+                      key={i}
+                      className={classes}
+                      onMouseDown={() => startDrag(i)}
+                      onMouseEnter={() => enterTile(i)}
+                  >
                 <span className={`tile-letter${letter === 'Qu' ? ' tile-letter--qu' : ''}`}>
                   {letter}
                 </span>
-              </div>
-            );
-          })}
-        </div>
-      </main>
-    </div>
+                  </div>
+              );
+            })}
+          </div>
+        </main>
+      </div>
   );
 }
