@@ -1,6 +1,6 @@
-# Boggle Your Mind Project
+# Boggle Buddies Project
 
-## Project name: Boggle your Mind
+## Project Name: Boggle Buddies
 
 ### 1. Overview
 Implement an application for the game **Boggle**. The application should include algorithms to (1) randomly shuffle the letter dice to generate a board and (2) check whether submitted words are valid.
@@ -14,7 +14,7 @@ Core gameplay features include tracking and displaying **user stats** (e.g., win
 #### 2.1 Must-have (MVP)
 - **Account registration** (authentication)
 - **Login** 
-- **Guest PLay**
+- **Guest Play**
 - **Real-time multiplayer** 
 - **Play vs Machine**
 - **Settings Customization**
@@ -75,25 +75,47 @@ Core gameplay features include tracking and displaying **user stats** (e.g., win
 #### Source
 - **Dictionary database TBD**
 
-### 5. Repository Structure (Current Idea)
-- RESEARCH/
-    - Research Reports of each developer
-    - Troubleshooting Reports of each developer
-- ROLES.md
-- README.md
-- STYLE.md
-- docker/
-    - Dockerfile.backend
-    - Dockerfile.frontend
-    - Dockerfile.SQL
-    - docker-compose.yml
-- docs/
-    - API.md
-    - TESTING.md
-    - ARCHITECTURE.md
+### 5. Repository Structure (Current)
+
+- API_DOCUMENTS/
+  - GAME_API_ENDPOINTS.md
+  - USER_API_ENDPOINTS.md
+  - GameController_v2.md
+  - UserController_v2.md
+
+- BoggleSpringBoot/
+  - src/main/java/com.example.Boggle/
+    - Model/
+      - Controllers/
+      - Tables/
+    - repository/
+    - Service/
+    - Security/
+    - util/
+    - BoggleApplication.java
+  - src/main/resources/
+    - db/
+      - BoggleDB.sql
+      - DictionaryData.sql
+    - application.properties
+  - src/test/
+
+- Docker/
+  - docker-compose.yml
+  - Dockerfile
+
 - frontend/
-- backend/ 
-- database/
+  - src/
+    - pages/
+    - components/
+    - services/
+  - public/
+
+- RESEARCH/
+- README.md
+- ROLES.md
+- STYLE.md
+- FILE_STRUCTURE.md
 
 ### 6. Walking Skeleton Plan
 
