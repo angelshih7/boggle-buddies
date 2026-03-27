@@ -79,3 +79,20 @@
   color: #ffffff;
   border: 1.5px solid rgba(255, 255, 255, 0.3);
 }
+
+.home-btn--close {
+  float: right;
+  background: rgba(255, 255, 255, 0.12);
+  color: #303E77;
+  height: 50px;
+  margin: 16px;
+  width: 50px;
+}
+
+.multiplayer-menu {
+  background: #ffffff;
+  border-radius: 16px;
+  height: 75%;
+  position: absolute;
+  width: 50%;
+}
