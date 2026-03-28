@@ -52,7 +52,7 @@ export default function SignupPage() {
         }
 
         // Basic startup call to API, currently not working due to CORS violation but implemented
-        fetch(`http://localhost:8080/api/users/register`, {
+        fetch(`/api/users/register`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

@@ -1,6 +1,8 @@
 stages:
   - lint
   - test
+  - deploy
+
 
 lint-backend:
   image: gradle:8.5-jdk21
@@ -40,3 +42,25 @@ test-frontend:
     - cd frontend
     - npm ci
     - npm run test -- --run
+
+deploy:
+  stage: deploy
+  only:
+    - main
+    - develop
+  before_script:
+    - apt-get update -qq && apt-get install -y openssh-client
+    - eval $(ssh-agent -s)
+    - chmod 400 "$DEPLOY_SSH_KEY"
+    - ssh-add "$DEPLOY_SSH_KEY"
+    - mkdir -p ~/.ssh
+    - ssh-keyscan cs506x14.cs.wisc.edu >> ~/.ssh/known_hosts
+  script:
+    - ssh raudales-montes@cs506x14.cs.wisc.edu "
+        cd /home/raudales-montes/Project_14 &&
+        git pull origin main &&
+        docker compose -f DockerVM/docker-compose.yml down &&
+        docker compose -f DockerVM/docker-compose.yml build --no-cache &&
+        docker compose -f DockerVM/docker-compose.yml up -d &&
+        docker image prune -f
+      "

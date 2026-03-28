@@ -145,7 +145,7 @@ class WordSubmissionServiceTest {
     void submitWordRejectsWordNotInDictionary() {
         when(gameRepository.findById(100)).thenReturn(Optional.of(game));
         when(userRepository.findById(1)).thenReturn(Optional.of(player1));
-        when(dictionaryRepository.findByWord("COW")).thenReturn(Optional.empty());
+        when(dictionaryRepository.findByWordIgnoreCase("COW")).thenReturn(Optional.empty());
 
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cow");
 
@@ -173,7 +173,7 @@ class WordSubmissionServiceTest {
 
         when(gameRepository.findById(100)).thenReturn(Optional.of(game));
         when(userRepository.findById(1)).thenReturn(Optional.of(player1));
-        when(dictionaryRepository.findByWord("CAT")).thenReturn(Optional.of(dictionary));
+        when(dictionaryRepository.findByWordIgnoreCase("CAT")).thenReturn(Optional.of(dictionary));
         when(foundWordRepository.existsByGame_IdAndPlayer_IdAndDictionaryWord_Id(100, 1, 77)).thenReturn(true);
 
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cat");
@@ -206,7 +206,7 @@ class WordSubmissionServiceTest {
         when(gameRepository.findById(100)).thenReturn(Optional.of(game));
         when(userRepository.findById(1)).thenReturn(Optional.of(player1));
         when(userRepository.getReferenceById(1)).thenReturn(player1);
-        when(dictionaryRepository.findByWord("CAT")).thenReturn(Optional.of(dictionary));
+        when(dictionaryRepository.findByWordIgnoreCase("CAT")).thenReturn(Optional.of(dictionary));
         when(foundWordRepository.existsByGame_IdAndPlayer_IdAndDictionaryWord_Id(100, 1, 88)).thenReturn(false);
 
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cat");
@@ -249,7 +249,7 @@ class WordSubmissionServiceTest {
         when(gameRepository.findById(100)).thenReturn(Optional.of(game));
         when(userRepository.findById(1)).thenReturn(Optional.of(player1));
         when(userRepository.getReferenceById(1)).thenReturn(player1);
-        when(dictionaryRepository.findByWord("DOG")).thenReturn(Optional.of(dictionary));
+        when(dictionaryRepository.findByWordIgnoreCase("DOG")).thenReturn(Optional.of(dictionary));
         when(foundWordRepository.existsByGame_IdAndPlayer_IdAndDictionaryWord_Id(100, 1, 99)).thenReturn(false);
         doThrow(new DataIntegrityViolationException("duplicate")).when(foundWordRepository).save(any());
 
@@ -273,7 +273,7 @@ class WordSubmissionServiceTest {
 
         when(gameRepository.findById(100)).thenReturn(Optional.of(game));
         when(userRepository.findById(1)).thenReturn(Optional.of(player1));
-        when(dictionaryRepository.findByWord("COW")).thenReturn(Optional.of(dictionary));
+        when(dictionaryRepository.findByWordIgnoreCase("COW")).thenReturn(Optional.of(dictionary));
 
         WordSubmissionService.Result result = wordSubmissionService.submitWord(100, 1, "cow");
 

@@ -51,7 +51,7 @@ export default function LoginPage() {
         }
         
         // Basic startup call to API, currently not working due to CORS violation but implemented
-        fetch(`http://localhost:8080/api/users/login`, {
+        fetch(`/api/users/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -87,7 +87,7 @@ export default function LoginPage() {
     function handleGuest() {
         const username = usernameInput.trim();
 
-        fetch(`http://localhost:8080/api/users/guest`, {
+        fetch(`/api/users/guest`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

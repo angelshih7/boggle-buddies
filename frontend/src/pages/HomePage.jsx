@@ -4,6 +4,9 @@ import './HomePage.css';
 
 const STORAGE_KEY = 'bbUser';
 
+/**
+ * Display home Page with options to play solo, view rank, and view account. Only play solo is implemented for now.
+ */
 export default function HomePage() {
     const storedUser  = localStorage.getItem(STORAGE_KEY);
     const user        = storedUser ? JSON.parse(storedUser) : null;
