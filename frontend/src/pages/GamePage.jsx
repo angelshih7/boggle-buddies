@@ -121,7 +121,7 @@ export default function GamePage() {
 
   // ---- Word submission --------------------------------------------------
 
-  // eslint-disable-next-line react-compiler/react-compiler, react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization, react-hooks/exhaustive-deps
   const submitWord = useCallback(async (word) => {
     if (word.length < MIN_WORD_LENGTH) {
       setFeedback({ word, accepted: false, reason: 'TOO_SHORT' });
