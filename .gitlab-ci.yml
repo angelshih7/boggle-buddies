@@ -52,7 +52,7 @@ deploy:
     - develop
   script:
     - cd /home/raudales-montes/Project_14
-    - git pull origin main
+    - git fetch origin main && git checkout -f main && git pull origin main
     - docker compose -f DockerVM/docker-compose.yml down
     - docker compose -f DockerVM/docker-compose.yml build --no-cache
     - docker compose -f DockerVM/docker-compose.yml up -d
