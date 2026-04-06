@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { clearExpiredSession } from '../utils/session';
 import './GamePage.css';
 
 /**
@@ -40,6 +41,7 @@ const REASON_LABEL = {
 
 export default function GamePage() {
   const location   = useLocation();
+  const navigate   = useNavigate();
   const playerName = location.state?.playerName ?? 'Guest';
   const gameId     = location.state?.gameId   ?? null;
   const playerId   = location.state?.playerId ?? null;
@@ -135,6 +137,14 @@ export default function GamePage() {
         const data = await res.json();
 
         setFeedback({ word, accepted: data.accepted, reason: data.reason });
+
+        if (data.reason === 'PLAYER_NOT_FOUND') {
+          const storedUser = JSON.parse(localStorage.getItem('bbUser') || 'null');
+          if (storedUser?.isGuest) {
+            clearExpiredSession(navigate);
+            return;
+          }
+        }
 
         if (data.accepted) {
           if (data.points) setScore(s => s + data.points);
