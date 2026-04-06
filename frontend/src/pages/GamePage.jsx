@@ -36,6 +36,12 @@ const REASON_LABEL = {
   ERROR:                'network error',
 };
 
+function formatTime(totalSeconds = 0) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 // -----------------------------------------------------------------------
 
 export default function GamePage() {
@@ -50,6 +56,9 @@ export default function GamePage() {
   const [selectedPath, setSelectedPath] = useState([]);
   const [feedback, setFeedback]         = useState(null);
   const [foundWords, setFoundWords]     = useState([]);
+  const [gameStatus, setGameStatus]     = useState('IN_PROGRESS');
+  const [remainingTime, setRemainingTime] = useState(180);
+  const isGameOver = gameStatus === 'FINISHED' || remainingTime <= 0;
 
   const isDraggingRef = useRef(false);
   const pathRef       = useRef([]);
@@ -93,6 +102,31 @@ export default function GamePage() {
     return () => clearInterval(interval);
   }, [fetchFoundWords]);
 
+useEffect(() => {
+  if (gameId == null) return;
+
+  const fetchGameState = async () => {
+    try {
+      const res = await fetch(`/api/game/${gameId}`);
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setGameStatus(data.status ?? 'IN_PROGRESS');
+
+      if (typeof data.remainingSeconds === 'number') {
+        setRemainingTime(data.remainingSeconds);
+      }
+    } catch (err) {
+      console.error('Error fetching game state:', err);
+    }
+  };
+
+  fetchGameState();
+  const interval = setInterval(fetchGameState, 1000);
+
+  return () => clearInterval(interval);
+}, [gameId]);
+
   // ---- Drag logic -------------------------------------------------------
 
   const enterTile = useCallback((index) => {
@@ -112,14 +146,20 @@ export default function GamePage() {
   }, []);
 
   const startDrag = useCallback((index) => {
+    if (isGameOver) return;
     isDraggingRef.current = true;
     setFeedback(null);
     updatePath([index]);
-  }, []);
+  }, [isGameOver]);
 
   // ---- Word submission --------------------------------------------------
 
   const submitWord = useCallback(async (word) => {
+    if (isGameOver) {
+      setFeedback({ word, accepted: false, reason: 'GAME_NOT_IN_PROGRESS' });
+      return;
+    }
+
     if (word.length < MIN_WORD_LENGTH) {
       setFeedback({ word, accepted: false, reason: 'TOO_SHORT' });
       return;
@@ -132,21 +172,26 @@ export default function GamePage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ playerId, word }),
         });
+
         const data = await res.json();
 
         setFeedback({ word, accepted: data.accepted, reason: data.reason });
 
         if (data.accepted) {
           if (data.points) setScore(s => s + data.points);
-          fetchFoundWords(); // Immediate update on success
+          fetchFoundWords();
+        } else if (data.reason === 'GAME_NOT_IN_PROGRESS') {
+          setGameStatus('FINISHED');
+          setRemainingTime(0);
         }
+
       } catch {
         setFeedback({ word, accepted: false, reason: 'ERROR' });
       }
     } else {
       setFeedback({ word, accepted: null, reason: 'DEV_MODE' });
     }
-  }, [gameId, playerId, fetchFoundWords]);
+  }, [gameId, playerId, fetchFoundWords, isGameOver]);
 
   const finalize = useCallback(() => {
     if (!isDraggingRef.current) return;
@@ -203,6 +248,16 @@ export default function GamePage() {
             <span className="score-label">Score</span>
             <span className="score-value">{score}</span>
           </div>
+          <div className="score-section">
+            <span className="score-label">Time Left</span>
+            <span className="score-value">{formatTime(remainingTime)}</span>
+          </div>
+
+          {isGameOver && (
+            <div className="word-feedback word-feedback--bad">
+              Time’s up! Round over.
+            </div>
+          )}
 
           <div className="found-words-container">
             <h3 className="found-words-header">Found Words ({foundWords.length})</h3>
@@ -237,8 +292,7 @@ export default function GamePage() {
                     : '\u00A0'}
           </div>
 
-          <div className={`boggle-grid${boardLoading ? ' boggle-grid--loading' : ''}`}>
-            {letters.map((letter, i) => {
+          <div className={`boggle-grid${boardLoading || isGameOver ? ' boggle-grid--loading' : ''}`}>            {letters.map((letter, i) => {
               const isSelected = selectedPath.includes(i);
               const isFirst    = selectedPath[0] === i;
               const classes    = [
@@ -251,8 +305,8 @@ export default function GamePage() {
                   <div
                       key={i}
                       className={classes}
-                      onMouseDown={() => startDrag(i)}
-                      onMouseEnter={() => enterTile(i)}
+                      onMouseDown={() => !isGameOver && startDrag(i)}
+                      onMouseEnter={() => !isGameOver && enterTile(i)}
                   >
                 <span className={`tile-letter${letter === 'Qu' ? ' tile-letter--qu' : ''}`}>
                   {letter}
