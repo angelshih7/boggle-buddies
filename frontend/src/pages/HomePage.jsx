@@ -85,8 +85,12 @@ export default function HomePage() {
                     {loading ? 'Starting…' : '▶ Play Multiplayer'}
                 </button>
 
-                <button className="home-btn home-btn--secondary" disabled>
-                    🏆 Rank
+                <button
+                    className="home-btn home-btn--primary"
+                    onClick={() => navigate('/stats', { state: { playerName, userId: user?.id } })}
+                    disabled={loading}
+                >
+                    🏆 Stats
                 </button>
 
                 <button className="home-btn home-btn--secondary" disabled>
