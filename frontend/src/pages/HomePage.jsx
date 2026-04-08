@@ -98,7 +98,11 @@ export default function HomePage() {
                     🏆 Stats
                 </button>
 
-                <button className="home-btn home-btn--secondary" disabled>
+                <button
+                    className="home-btn home-btn--primary"
+                    onClick={() => navigate('/account', { state: { playerName } })}
+                    disabled={loading}
+                >
                     👤 My Account
                 </button>
             </div>

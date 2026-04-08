@@ -10,7 +10,6 @@
   font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
 }
 
-/* ── Back button ── */
 .stats-back-btn {
   position: absolute;
   top: 24px;
@@ -32,7 +31,6 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
-/* ── Avatar ── */
 .stats-avatar {
   width: 88px;
   height: 88px;
@@ -48,7 +46,6 @@
   margin-bottom: 4px;
 }
 
-/* ── Name & subtitle ── */
 .stats-username {
   font-size: 1.4rem;
   font-weight: 700;
@@ -65,7 +62,6 @@
   letter-spacing: 0.1em;
 }
 
-/* ── Cards grid ── */
 .stats-grid {
   display: flex;
   gap: 16px;
@@ -82,10 +78,9 @@
   background: rgba(255, 255, 255, 0.10);
   border: 1.5px solid rgba(255, 255, 255, 0.20);
   border-radius: 20px;
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease, border-color 200ms ease;
 }
 
-/* Subtle pop when real data arrives */
 .stat-card--loaded {
   background: rgba(255, 255, 255, 0.16);
   border-color: rgba(255, 255, 255, 0.35);
