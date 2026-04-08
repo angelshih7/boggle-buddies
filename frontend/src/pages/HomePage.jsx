@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
+import { clearExpiredSession } from '../utils/session';
 
 const STORAGE_KEY = 'bbUser';
 
@@ -38,6 +39,10 @@ export default function HomePage() {
             });
 
             if (!res.ok) {
+                if (res.status === 404 && user?.isGuest) {
+                    clearExpiredSession(navigate);
+                    return;
+                }
                 alert('Failed to create game. Please try again.');
                 return;
             }
