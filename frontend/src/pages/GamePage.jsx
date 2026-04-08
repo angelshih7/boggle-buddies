@@ -216,7 +216,6 @@ export default function GamePage() {
           </div>
 
           <div className="found-words-container">
-            <h3 className="found-words-header">Found Words ({foundWords.length})</h3>
             <div className="found-words-list">
               {foundWords.length > 0 ? (
                   foundWords.map((fw, idx) => (
