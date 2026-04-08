@@ -19,8 +19,8 @@ export default function StatsPage() {
     const playerName = location.state?.playerName ?? user?.username ?? 'Guest';
     const userId     = location.state?.userId     ?? user?.id       ?? null;
 
-    const [stats, setStats]     = useState({ gamesWon: 0, wordsFound: 0, totalPoints: 0 });
-    const [loaded, setLoaded]   = useState(false);
+    const [stats, setStats]   = useState({ gamesWon: 0, wordsFound: 0, totalPoints: 0 });
+    const [loaded, setLoaded] = useState(false);
 
     useEffect(() => {
         if (!userId) return;

@@ -48,4 +48,5 @@ public interface FoundWordRepository extends JpaRepository<FoundWord, Integer> {
     """)
     Integer totalPointsForPlayer(@Param("gameId") Integer gameId,
                                  @Param("playerId") Integer playerId);
+
 }
