@@ -8,14 +8,16 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 @Repository
 public interface StatsRepository extends JpaRepository<User, Integer> {
-    @Query("SELECT new com.example.dto.UserStatsDTO(" +
-            // Games Played: Count where user is player1 OR player2
-            "(SELECT COUNT(g) FROM Game g WHERE g.player1.id = :userId OR g.player2.id = :userId), " +
+    interface UserStatsProjection {
+        Long getGamesPlayed();
+        Long getGamesWon();
+        Long getWordsFound();
+    }
 
-            // Games Won: Count where user is the winner
-            "(SELECT COUNT(g) FROM Game g WHERE g.winnerPlayerId = :userId), " +
-
-            // Words Found: Count entries in found_words
-            "(SELECT COUNT(fw) FROM FoundWord fw WHERE fw.player.id = :userId))")
-    UserStatsDTO getUserStats(@Param("userId") Integer userId);
+    @Query(value = "SELECT " +
+            "(SELECT COUNT(*) FROM games WHERE player1_id = :userId OR player2_id = :userId) as gamesPlayed, " +
+            "(SELECT COUNT(*) FROM games WHERE winner_player_id = :userId) as gamesWon, " +
+            "(SELECT COUNT(*) FROM found_words WHERE player_id = :userId) as wordsFound",
+            nativeQuery = true)
+    UserStatsProjection getUserStats(@Param("userId") Integer userId);
 }
