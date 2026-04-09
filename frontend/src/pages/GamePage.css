@@ -172,3 +172,115 @@
 .tile-letter--qu {
   font-size: clamp(1.1rem, 2.5vw, 1.6rem);
 }
+
+/** Rules button in sidebar */
+.rules-btn {
+  margin-top: auto;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.rules-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/** Modal overlay */
+.rules-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+/** Modal card */
+.rules-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 28px 32px;
+  width: min(480px, 90vw);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.rules-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.rules-modal-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  color: #303E77;
+  margin: 0;
+}
+
+.rules-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: #6b7280;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+
+.rules-modal-close:hover {
+  color: #303E77;
+}
+
+/** Rules list */
+.rules-modal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  counter-reset: rule-counter;
+}
+
+.rules-modal-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  background: #f8f9ff;
+  border-radius: 10px;
+  border-left: 4px solid #4a5fc1;
+  counter-increment: rule-counter;
+}
+
+.rules-modal-item::before {
+  content: counter(rule-counter);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #4a5fc1;
+  letter-spacing: 1px;
+}
+
+.rules-modal-heading {
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  color: #303E77;
+}
+
+.rules-modal-body {
+  font-size: 0.8rem;
+  color: #4b5563;
+  line-height: 1.5;
+}

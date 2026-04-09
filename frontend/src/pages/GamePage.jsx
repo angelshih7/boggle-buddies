@@ -22,6 +22,15 @@ function isAdjacent(a, b) {
   return a !== b && Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1;
 }
 
+const RULES = [
+  { heading: 'Adjacent tiles only', body: 'Connect tiles horizontally, vertically, or diagonally.' },
+  { heading: 'No reusing tiles', body: 'Each tile can only be used once per word. Backtrack to undo.' },
+  { heading: 'Minimum 3 letters', body: 'Words shorter than 3 letters are not accepted.' },
+  { heading: 'Must be in the dictionary', body: 'Only real English words score points.' },
+  { heading: 'No duplicates', body: 'Each word can only be submitted once per game.' },
+  { heading: 'Scoring', body: '3–4 letters = 1 pt · 5 = 2 pts · 6 = 3 pts · 7 = 5 pts · 8+ = 11 pts' },
+];
+
 const REASON_LABEL = {
   TOO_SHORT:            'too short (min 3 letters)',
   NOT_IN_DICTIONARY:    'not a word',
@@ -52,6 +61,7 @@ export default function GamePage() {
   const [selectedPath, setSelectedPath] = useState([]);
   const [feedback, setFeedback]         = useState(null);
   const [foundWords, setFoundWords]     = useState([]);
+  const [showRules, setShowRules]       = useState(false);
 
   const isDraggingRef = useRef(false);
   const pathRef       = useRef([]);
@@ -203,6 +213,7 @@ export default function GamePage() {
   }
 
   return (
+    <>
       <div className="game-page">
         <aside className="game-sidebar">
           <div className="player-avatar">
@@ -214,6 +225,9 @@ export default function GamePage() {
             <span className="score-label">Score</span>
             <span className="score-value">{score}</span>
           </div>
+
+          <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
+          <button className="rules-btn" onClick={() => navigate('/home')}>⌂ Home</button>
 
           <div className="found-words-container">
             <h3 className="found-words-header">Found Words ({foundWords.length})</h3>
@@ -274,5 +288,25 @@ export default function GamePage() {
           </div>
         </main>
       </div>
+
+      {showRules && (
+        <div className="rules-overlay" onClick={() => setShowRules(false)}>
+          <div className="rules-modal" onClick={e => e.stopPropagation()}>
+            <div className="rules-modal-header">
+              <h2 className="rules-modal-title">Rules</h2>
+              <button className="rules-modal-close" onClick={() => setShowRules(false)}>✕</button>
+            </div>
+            <ol className="rules-modal-list">
+              {RULES.map((rule, i) => (
+                <li key={i} className="rules-modal-item">
+                  <span className="rules-modal-heading">{rule.heading}</span>
+                  <span className="rules-modal-body">{rule.body}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
