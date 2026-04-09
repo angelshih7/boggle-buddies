@@ -5,9 +5,9 @@ import './StatsPage.css';
 const STORAGE_KEY = 'bbUser';
 
 const STAT_CARDS = [
+    { key: 'gamesPlayed', label: 'Games Played', icon: '🎮' },
     { key: 'gamesWon',    label: 'Games Won',    icon: '🏆' },
     { key: 'wordsFound',  label: 'Words Found',  icon: '📝' },
-    { key: 'totalPoints', label: 'Total Points', icon: '⭐' },
 ];
 
 export default function StatsPage() {
