@@ -277,4 +277,8 @@ public class UserController {
         rng.nextBytes(b);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(b);
     }
+
+    private void deleteExpiredGuests(){
+
+    }
 }
