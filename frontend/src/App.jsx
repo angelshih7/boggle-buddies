@@ -7,6 +7,7 @@ import GamePage from './pages/GamePage'
 import DictionaryPage from "./pages/DictionaryPage";
 import StatsPage from "./pages/StatsPage";
 import AccountPage from "./pages/AccountPage";
+import HowToPlayPage from "./pages/HowToPlayPage";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path = "/dictionary" element = {<DictionaryPage/>}/>
         <Route path = "/stats"      element = {<StatsPage/>}/>
         <Route path = "/account"    element = {<AccountPage/>}/>
+        <Route path = "/how-to-play" element = {<HowToPlayPage/>}/>
       </Routes>
     </HashRouter>
   )
