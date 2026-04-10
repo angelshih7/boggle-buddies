@@ -4,6 +4,7 @@ import com.example.Boggle.Model.Tables.FoundWord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -13,21 +14,32 @@ import java.util.List;
  * Provides CRUD operations and custom query methods related to
  * words submitted during a game, score aggregation and duplicate checks.
  */
+@Repository
 public interface FoundWordRepository extends JpaRepository<FoundWord, Integer> {
 
-    // handy for "show all words found in a game"
+    /**
+     * Fetch all words found in a specific game (regardless of player).
+     */
     List<FoundWord> findByGame_Id(Integer gameId);
 
-    // handy for "show a player's words in a game"
-    List<FoundWord> findByGame_IdAndPlayer_Id(Integer gameId, Integer playerId);
-
+    /**
+     * Fetch a specific player's found words for the "Found Board" display.
+     * Ordered by 'foundAt' descending so the most recent finds appear first.
+     */
+    List<FoundWord> findByGame_IdAndPlayer_IdOrderByFoundAtDesc(Integer gameId, Integer playerId);
 
     /**
-     * Query to some total points from the Found word entry associated with player.
+     * Checks if a player has already submitted a specific dictionary word in a game.
+     * Prevents duplicates before attempting a database save.
+     */
+    boolean existsByGame_IdAndPlayer_IdAndDictionaryWord_Id(Integer gameId, Integer playerId, Integer dictionaryWordId);
+
+    /**
+     * Calculates the total score for a player in a specific game.
      *
-     * @param gameId id related to the game being played or addressed
-     * @param playerId id of the player whose points are being counted
-     * @return total score of player
+     * @param gameId   ID of the current game
+     * @param playerId ID of the player
+     * @return total score (returns 0 if no words found)
      */
     @Query("""
     select coalesce(sum(f.dictionaryWord.pointValue), 0)
@@ -36,6 +48,5 @@ public interface FoundWordRepository extends JpaRepository<FoundWord, Integer> {
     """)
     Integer totalPointsForPlayer(@Param("gameId") Integer gameId,
                                  @Param("playerId") Integer playerId);
-    // handy for quick duplicate check
-    boolean existsByGame_IdAndPlayer_IdAndDictionaryWord_Id(Integer gameId, Integer playerId, Integer dictionaryWordId);
+
 }
