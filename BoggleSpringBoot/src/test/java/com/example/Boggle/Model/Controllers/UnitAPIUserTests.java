@@ -1,18 +1,15 @@
-package com.example.Boggle;
+package com.example.Boggle.Model.Controllers;
 
 
-import com.example.Boggle.Model.Controllers.UserController;
 import com.example.Boggle.Model.Tables.User;
 import com.example.Boggle.Security.PasswordUtil;
 import com.example.Boggle.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.net.http.HttpClient;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
