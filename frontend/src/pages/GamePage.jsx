@@ -69,6 +69,7 @@ export default function GamePage() {
   const [foundWords, setFoundWords]     = useState([]);
   const [gameStatus, setGameStatus]     = useState('IN_PROGRESS');
   const [remainingTime, setRemainingTime] = useState(180);
+  const [showRules, setShowRules]       = useState(false);
   const isGameOver = gameStatus === 'FINISHED' || remainingTime <= 0;
 
   const isDraggingRef = useRef(false);
@@ -165,7 +166,6 @@ useEffect(() => {
 
   // ---- Word submission --------------------------------------------------
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization, react-hooks/exhaustive-deps
   const submitWord = useCallback(async (word) => {
     if (isGameOver) {
       setFeedback({ word, accepted: false, reason: 'GAME_NOT_IN_PROGRESS' });
@@ -211,7 +211,7 @@ useEffect(() => {
     } else {
       setFeedback({ word, accepted: null, reason: 'DEV_MODE' });
     }
-  }, [gameId, playerId, fetchFoundWords, isGameOver]);
+  }, [gameId, playerId, fetchFoundWords, isGameOver, navigate]);
 
   const finalize = useCallback(() => {
     if (!isDraggingRef.current) return;
