@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
  * and login behavior using a mocked user repository.
  */
 @MockitoBean
-public class UnitAPIUserTests {
+public class UserControllerTests {
 
     private UserRepository userRepository;
     private UserController userController;
