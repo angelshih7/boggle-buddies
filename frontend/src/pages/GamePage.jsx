@@ -88,7 +88,7 @@ export default function GamePage() {
 
 
   const fetchWords = useCallback(async () => {
-    if(gameId == null || playerId == null) return;
+    if(gameId == null) return;
     try{
       const res = await fetch(`/api/game/${gameId}/board/words`);
       if(res.ok){
