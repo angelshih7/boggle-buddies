@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { clearExpiredSession } from '../utils/session';
 import './GamePage.css';
+import WordsModel from '../components/WordsModal';
 
 /**
  * Placeholder letters used only during local development.
@@ -52,6 +53,8 @@ export default function GamePage() {
   const [selectedPath, setSelectedPath] = useState([]);
   const [feedback, setFeedback]         = useState(null);
   const [foundWords, setFoundWords]     = useState([]);
+  const [gameOver, setGameOver]         = useState(false);
+  const [allBoardWords, setAllBoardWords]   = useState([]);
 
   const isDraggingRef = useRef(false);
   const pathRef       = useRef([]);
@@ -65,6 +68,8 @@ export default function GamePage() {
     pathRef.current = newPath;
     setSelectedPath([...newPath]);
   };
+
+
 
   // ---- Found Word Fetching Logic ---------------------------------------
 
@@ -81,6 +86,20 @@ export default function GamePage() {
     }
   }, [gameId, playerId]);
 
+
+  const fetchWords = useCallback(async () => {
+    if(gameId == null || playerId == null) return;
+    try{
+      const res = await fetch(`/api/game/${gameId}/board/words`);
+      if(res.ok){
+        const data = await res.json();
+        setAllBoardWords(data);
+      }
+
+    }catch(err){
+      console.error("Error fetching words:", err);
+    }
+  }, [gameId]);
   /** * Poll for new words. Wrapping the call in a function inside the effect
    * satisfies the linter by avoiding synchronous setState calls during render.
    */
@@ -271,7 +290,12 @@ export default function GamePage() {
               );
             })}
           </div>
+          <button className="end-game-btn" onClick={async () => { await fetchWords(); setGameOver(true); }}>
+            End Game
+          </button>
         </main>
+
+        {gameOver && <WordsModel words={allBoardWords} />}
       </div>
   );
 }
