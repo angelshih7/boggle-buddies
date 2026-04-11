@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
  * and board retrieval behavior using mocked repositories.
  */
 @MockitoBean
-public class UnitAPIGameTest {
+public class GameControllerTest {
 
     private GameController gameController;
     private GameService gameService;
