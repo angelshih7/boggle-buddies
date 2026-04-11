@@ -140,7 +140,6 @@ export default function GamePage() {
 
   // ---- Word submission --------------------------------------------------
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization, react-hooks/exhaustive-deps
   const submitWord = useCallback(async (word) => {
     if (word.length < MIN_WORD_LENGTH) {
       setFeedback({ word, accepted: false, reason: 'TOO_SHORT' });
@@ -176,7 +175,7 @@ export default function GamePage() {
     } else {
       setFeedback({ word, accepted: null, reason: 'DEV_MODE' });
     }
-  }, [gameId, playerId, fetchFoundWords]);
+  }, [gameId, playerId, fetchFoundWords, navigate]);
 
   const finalize = useCallback(() => {
     if (!isDraggingRef.current) return;
