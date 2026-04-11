@@ -430,6 +430,10 @@ public class UnitAPIGameTest {
         result.normalizedWord = "APPLE";
         result.points = 5;
 
+        Game mockGame = mock(Game.class);
+        when(mockGame.getStatus()).thenReturn(GameStatus.IN_PROGRESS);
+        when(gameService.getGame(15)).thenReturn(mockGame);
+        when(gameService.isGameExpired(mockGame)).thenReturn(false);
         when(wordSubmissionService.submitWord(15,2,"apple"))
                 .thenReturn(result);
 
@@ -563,6 +567,10 @@ public class UnitAPIGameTest {
         result.normalizedWord = "CAT";
         result.points = 3;
 
+        Game mockGame = mock(Game.class);
+        when(mockGame.getStatus()).thenReturn(GameStatus.IN_PROGRESS);
+        when(gameService.getGame(5)).thenReturn(mockGame);
+        when(gameService.isGameExpired(mockGame)).thenReturn(false);
         when(wordSubmissionService.submitWord(5, 1, "cat")).thenReturn(result);
 
         GameController.SubmitWordResponse response = gameController.submitWord(5, req);
@@ -588,6 +596,10 @@ public class UnitAPIGameTest {
         result.normalizedWord = "AB";
         result.points = 0;
 
+        Game mockGame = mock(Game.class);
+        when(mockGame.getStatus()).thenReturn(GameStatus.IN_PROGRESS);
+        when(gameService.getGame(5)).thenReturn(mockGame);
+        when(gameService.isGameExpired(mockGame)).thenReturn(false);
         when(wordSubmissionService.submitWord(5, 1, "ab")).thenReturn(result);
 
         GameController.SubmitWordResponse response = gameController.submitWord(5, req);
@@ -612,6 +624,10 @@ public class UnitAPIGameTest {
         result.normalizedWord = "CAT";
         result.points = 0;
 
+        Game mockGame = mock(Game.class);
+        when(mockGame.getStatus()).thenReturn(GameStatus.IN_PROGRESS);
+        when(gameService.getGame(999)).thenReturn(mockGame);
+        when(gameService.isGameExpired(mockGame)).thenReturn(false);
         when(wordSubmissionService.submitWord(999, 1, "cat")).thenReturn(result);
 
         GameController.SubmitWordResponse response = gameController.submitWord(999, req);
@@ -636,6 +652,10 @@ public class UnitAPIGameTest {
         result.normalizedWord = "CAT";
         result.points = 0;
 
+        Game mockGame = mock(Game.class);
+        when(mockGame.getStatus()).thenReturn(GameStatus.IN_PROGRESS);
+        when(gameService.getGame(5)).thenReturn(mockGame);
+        when(gameService.isGameExpired(mockGame)).thenReturn(false);
         when(wordSubmissionService.submitWord(5, 99, "cat")).thenReturn(result);
 
         GameController.SubmitWordResponse response = gameController.submitWord(5, req);
