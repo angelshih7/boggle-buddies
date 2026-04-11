@@ -10,7 +10,7 @@ services:
       MYSQL_PASSWORD: boggle
       MYSQL_ROOT_PASSWORD: root_password
     ports:
-      - "53336:3306"
+      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -33,7 +33,7 @@ services:
       SPRING_DATASOURCE_USERNAME: boggle
       SPRING_DATASOURCE_PASSWORD: boggle
     ports:
-      - "53326:8080"
+      - "8080:8080"
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
@@ -45,7 +45,7 @@ services:
       PMA_USER: root
       PMA_PASSWORD: root_password
     ports:
-      - "50081:80"
+      - "8081:80"
 
 volumes:
   db_data:
