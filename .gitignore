@@ -30,3 +30,7 @@ Thumbs.db
 ## For Java
 *.class
 *.jar
+
+##SSH keys
+*.pub
+deploy_key
