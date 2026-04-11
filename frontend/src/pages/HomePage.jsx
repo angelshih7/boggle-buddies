@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
+import { clearExpiredSession } from '../utils/session';
 
 const STORAGE_KEY = 'bbUser';
 
@@ -38,6 +39,10 @@ export default function HomePage() {
             });
 
             if (!res.ok) {
+                if (res.status === 404 && user?.isGuest) {
+                    clearExpiredSession(navigate);
+                    return;
+                }
                 alert('Failed to create game. Please try again.');
                 return;
             }
@@ -85,12 +90,28 @@ export default function HomePage() {
                     {loading ? 'Starting…' : '▶ Play Multiplayer'}
                 </button>
 
-                <button className="home-btn home-btn--secondary" disabled>
-                    🏆 Rank
+                <button
+                    className="home-btn home-btn--primary"
+                    onClick={() => navigate('/stats', { state: { playerName, userId: user?.id } })}
+                    disabled={loading}
+                >
+                    🏆 Stats
                 </button>
 
-                <button className="home-btn home-btn--secondary" disabled>
+                <button
+                    className="home-btn home-btn--primary"
+                    onClick={() => navigate('/account', { state: { playerName } })}
+                    disabled={loading}
+                >
                     👤 My Account
+                </button>
+
+                <button
+                    className="home-btn home-btn--secondary"
+                    onClick={() => navigate('/how-to-play')}
+                    disabled={loading}
+                >
+                    ? How to Play
                 </button>
             </div>
 
