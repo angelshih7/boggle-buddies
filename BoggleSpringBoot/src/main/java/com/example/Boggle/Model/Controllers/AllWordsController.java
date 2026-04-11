@@ -34,7 +34,7 @@ public class AllWordsController {
     @GetMapping("{gameId}/board/words")
     public ResponseEntity<List<WordCandidate>> getAllBoardWords(@PathVariable Integer gameId ){
         Board board =  gameService.getBoard(gameId);
-        String boardString = board.toString();
+        String boardString = board.getBoardString();
         List<WordCandidate> words = findWordsService.findValidWords(boardString);
         return ResponseEntity.ok(words);
     }

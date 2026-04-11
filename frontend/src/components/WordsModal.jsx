@@ -12,8 +12,8 @@ export default function WordsModal({ words }) {
         </div>
         <div className="modal-word-list">
           <ul>
-            {words.map((word, idx) => (
-              <li key={`${word}-${idx}`}>{word}</li>
+            {words.map((item, idx) => (
+              <li key={`${item.word}-${idx}`}>{item.word}</li>
             ))}
           </ul>
         </div>
