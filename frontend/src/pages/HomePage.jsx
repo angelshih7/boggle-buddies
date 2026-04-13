@@ -62,7 +62,43 @@ export default function HomePage() {
         }
     }
 
-    async function handleJoinMultiplayerGame() {}
+    async function handleJoinMultiplayerGame() {
+        if (!user?.id) {
+            alert('You must be logged in to start a game.');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await fetch('/api/game/' + multiplayerGameCode + '/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ playerId: user.id }),
+            });
+
+            if (!res.ok) {
+                if (res.status === 404 && user?.isGuest) {
+                    clearExpiredSession(navigate);
+                    return;
+                }
+                alert('Failed to create game. Please try again.');
+                return;
+            }
+
+            const data = await res.json();
+            navigate('/game', {
+                state: {
+                    playerName,
+                    gameId:   data.gameId,
+                    playerId: user.id,
+                },
+            });
+        } catch {
+            alert('Network error. Is the server running?');
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const handleChangeMultiplayerGameCode = (event) => {
         // Update the state with the current value of the input field
@@ -152,6 +188,7 @@ export default function HomePage() {
                     <button
                         className="home-btn home-btn--primary"
                         type="submit"
+                        onClick={() => handleJoinMultiplayerGame()}
                         disabled={loading}
                     >
                         {loading ? 'Starting…' : '▶ Join Match'}
