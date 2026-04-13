@@ -18,7 +18,7 @@ export default function WordsModal({ words }) {
           </ul>
         </div>
         <div>
-          <button className="modal-close-btn" onClick={() => navigate('/')}>
+          <button className="modal-close-btn" onClick={() => navigate('/home')}>
             Close and Continue
           </button>
         </div>

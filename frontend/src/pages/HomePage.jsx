@@ -105,6 +105,14 @@ export default function HomePage() {
                 >
                     👤 My Account
                 </button>
+
+                <button
+                    className="home-btn home-btn--secondary"
+                    onClick={() => navigate('/how-to-play')}
+                    disabled={loading}
+                >
+                    ? How to Play
+                </button>
             </div>
 
             {/* Multiplayer menu for creating and joining games */}
