@@ -22,6 +22,15 @@ function isAdjacent(a, b) {
   return a !== b && Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1;
 }
 
+const RULES = [
+  { heading: 'Adjacent tiles only', body: 'Connect tiles horizontally, vertically, or diagonally.' },
+  { heading: 'No reusing tiles', body: 'Each tile can only be used once per word. Backtrack to undo.' },
+  { heading: 'Minimum 3 letters', body: 'Words shorter than 3 letters are not accepted.' },
+  { heading: 'Must be in the dictionary', body: 'Only real English words score points.' },
+  { heading: 'No duplicates', body: 'Each word can only be submitted once per game.' },
+  { heading: 'Scoring', body: '3–4 letters = 1 pt · 5 = 2 pts · 6 = 3 pts · 7 = 5 pts · 8+ = 11 pts' },
+];
+
 const REASON_LABEL = {
   TOO_SHORT:            'too short (min 3 letters)',
   NOT_IN_DICTIONARY:    'not a word',
@@ -36,6 +45,12 @@ const REASON_LABEL = {
   DEV_MODE:             '',
   ERROR:                'network error',
 };
+
+function formatTime(totalSeconds = 0) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
 
 // -----------------------------------------------------------------------
 
@@ -52,6 +67,10 @@ export default function GamePage() {
   const [selectedPath, setSelectedPath] = useState([]);
   const [feedback, setFeedback]         = useState(null);
   const [foundWords, setFoundWords]     = useState([]);
+  const [gameStatus, setGameStatus]     = useState('IN_PROGRESS');
+  const [remainingTime, setRemainingTime] = useState(180);
+  const [showRules, setShowRules]       = useState(false);
+  const isGameOver = gameStatus === 'FINISHED' || remainingTime <= 0;
 
   const isDraggingRef = useRef(false);
   const pathRef       = useRef([]);
@@ -95,6 +114,31 @@ export default function GamePage() {
     return () => clearInterval(interval);
   }, [fetchFoundWords]);
 
+useEffect(() => {
+  if (gameId == null) return;
+
+  const fetchGameState = async () => {
+    try {
+      const res = await fetch(`/api/game/${gameId}`);
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setGameStatus(data.status ?? 'IN_PROGRESS');
+
+      if (typeof data.remainingSeconds === 'number') {
+        setRemainingTime(data.remainingSeconds);
+      }
+    } catch (err) {
+      console.error('Error fetching game state:', err);
+    }
+  };
+
+  fetchGameState();
+  const interval = setInterval(fetchGameState, 1000);
+
+  return () => clearInterval(interval);
+}, [gameId]);
+
   // ---- Drag logic -------------------------------------------------------
 
   const enterTile = useCallback((index) => {
@@ -114,15 +158,20 @@ export default function GamePage() {
   }, []);
 
   const startDrag = useCallback((index) => {
+    if (isGameOver) return;
     isDraggingRef.current = true;
     setFeedback(null);
     updatePath([index]);
-  }, []);
+  }, [isGameOver]);
 
   // ---- Word submission --------------------------------------------------
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization, react-hooks/exhaustive-deps
   const submitWord = useCallback(async (word) => {
+    if (isGameOver) {
+      setFeedback({ word, accepted: false, reason: 'GAME_NOT_IN_PROGRESS' });
+      return;
+    }
+
     if (word.length < MIN_WORD_LENGTH) {
       setFeedback({ word, accepted: false, reason: 'TOO_SHORT' });
       return;
@@ -135,6 +184,7 @@ export default function GamePage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ playerId, word }),
         });
+
         const data = await res.json();
 
         setFeedback({ word, accepted: data.accepted, reason: data.reason });
@@ -149,15 +199,19 @@ export default function GamePage() {
 
         if (data.accepted) {
           if (data.points) setScore(s => s + data.points);
-          fetchFoundWords(); // Immediate update on success
+          fetchFoundWords();
+        } else if (data.reason === 'GAME_NOT_IN_PROGRESS') {
+          setGameStatus('FINISHED');
+          setRemainingTime(0);
         }
+
       } catch {
         setFeedback({ word, accepted: false, reason: 'ERROR' });
       }
     } else {
       setFeedback({ word, accepted: null, reason: 'DEV_MODE' });
     }
-  }, [gameId, playerId, fetchFoundWords]);
+  }, [gameId, playerId, fetchFoundWords, isGameOver, navigate]);
 
   const finalize = useCallback(() => {
     if (!isDraggingRef.current) return;
@@ -203,6 +257,7 @@ export default function GamePage() {
   }
 
   return (
+    <>
       <div className="game-page">
         <aside className="game-sidebar">
           <div className="player-avatar">
@@ -214,6 +269,19 @@ export default function GamePage() {
             <span className="score-label">Score</span>
             <span className="score-value">{score}</span>
           </div>
+          <div className="score-section">
+            <span className="score-label">Time Left</span>
+            <span className="score-value">{formatTime(remainingTime)}</span>
+          </div>
+
+          {isGameOver && (
+            <div className="word-feedback word-feedback--bad">
+              Time’s up! Round over.
+            </div>
+          )}
+
+          <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
+          <button className="rules-btn" onClick={() => navigate('/home')}>⌂ Home</button>
 
           <div className="found-words-container">
             <div className="found-words-list">
@@ -247,8 +315,7 @@ export default function GamePage() {
                     : '\u00A0'}
           </div>
 
-          <div className={`boggle-grid${boardLoading ? ' boggle-grid--loading' : ''}`}>
-            {letters.map((letter, i) => {
+          <div className={`boggle-grid${boardLoading || isGameOver ? ' boggle-grid--loading' : ''}`}>            {letters.map((letter, i) => {
               const isSelected = selectedPath.includes(i);
               const isFirst    = selectedPath[0] === i;
               const classes    = [
@@ -261,8 +328,8 @@ export default function GamePage() {
                   <div
                       key={i}
                       className={classes}
-                      onMouseDown={() => startDrag(i)}
-                      onMouseEnter={() => enterTile(i)}
+                      onMouseDown={() => !isGameOver && startDrag(i)}
+                      onMouseEnter={() => !isGameOver && enterTile(i)}
                   >
                 <span className={`tile-letter${letter === 'Qu' ? ' tile-letter--qu' : ''}`}>
                   {letter}
@@ -273,5 +340,25 @@ export default function GamePage() {
           </div>
         </main>
       </div>
+
+      {showRules && (
+        <div className="rules-overlay" onClick={() => setShowRules(false)}>
+          <div className="rules-modal" onClick={e => e.stopPropagation()}>
+            <div className="rules-modal-header">
+              <h2 className="rules-modal-title">Rules</h2>
+              <button className="rules-modal-close" onClick={() => setShowRules(false)}>✕</button>
+            </div>
+            <ol className="rules-modal-list">
+              {RULES.map((rule, i) => (
+                <li key={i} className="rules-modal-item">
+                  <span className="rules-modal-heading">{rule.heading}</span>
+                  <span className="rules-modal-body">{rule.body}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
