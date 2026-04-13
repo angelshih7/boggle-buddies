@@ -12,6 +12,7 @@ import com.example.Boggle.util.ShuffleUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -30,6 +31,8 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
  */
 @Service
 public class GameService {
+
+    private static final long GAME_DURATION_SECONDS = 180;
 
     private final GameRepository gameRepository;
     private final BoardRepository boardRepository;
@@ -123,6 +126,7 @@ public class GameService {
         game.setPlayer2(player2);
         game.setStatus(GameStatus.IN_PROGRESS);
         game.setStartedAt(LocalDateTime.now());
+        game.setFinishedAt(null);
 
         return gameRepository.save(game);
     }
@@ -135,8 +139,10 @@ public class GameService {
      * @throws ResponseStatusException if the game does not exist
      */
     public Game getGame(Integer gameId) {
-        return gameRepository.findById(gameId)
+        Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Game id not found"));
+
+        return updateGameStatusIfExpired(game);
     }
 
 
@@ -195,6 +201,39 @@ public class GameService {
 
         return userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, fieldName + " not found"));
+    }
+
+    public long getGameDurationSeconds() {
+        return GAME_DURATION_SECONDS;
+    }
+
+    public long getRemainingSeconds(Game game) {
+        if (game.getStartedAt() == null) {
+            return GAME_DURATION_SECONDS;
+        }
+
+        LocalDateTime endTime = game.getStartedAt().plusSeconds(GAME_DURATION_SECONDS);
+        long remaining = Duration.between(LocalDateTime.now(), endTime).getSeconds();
+
+        return Math.max(remaining, 0);
+    }
+
+    public boolean isGameExpired(Game game) {
+        return game.getStartedAt() != null && getRemainingSeconds(game) <= 0;
+    }
+
+    public Game updateGameStatusIfExpired(Game game) {
+        if (game.getStatus() == GameStatus.IN_PROGRESS && isGameExpired(game)) {
+            game.setStatus(GameStatus.FINISHED);
+
+            if (game.getFinishedAt() == null) {
+                game.setFinishedAt(LocalDateTime.now());
+            }
+
+            game = gameRepository.save(game);
+        }
+
+        return game;
     }
 
     public List<Game> getWaitingGames() {

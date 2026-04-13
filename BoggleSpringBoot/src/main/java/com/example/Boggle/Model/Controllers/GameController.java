@@ -4,6 +4,7 @@ import com.example.Boggle.Model.Tables.Game;
 import com.example.Boggle.Service.GameScoreService;
 import com.example.Boggle.Service.GameService;
 import com.example.Boggle.Service.WordSubmissionService;
+import com.example.Boggle.Model.Tables.GameStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -11,9 +12,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import static org.springframework.http.HttpStatus.*;
 
-import org.springframework.http.HttpStatus;
 /**
  * REST controller for creating, joining, and retrieving Boggle games.
  *
@@ -128,13 +129,16 @@ public class GameController{
          */
         public LocalDateTime finishedAt;
 
+        public Long durationSeconds;
+        public Long remainingSeconds;
+
         /**
          * Builds a response DTO from a game entity.
          *
          * @param currentGame the game entity to summarize
          * @return a response containing key game details
          */
-        public static GameResponse GameSummaryDTO(Game currentGame){
+        public static GameResponse GameSummaryDTO(Game currentGame, GameService gameService){
             if (currentGame == null) {
                 throw new ResponseStatusException(NOT_FOUND, "Game id not found");
             }
@@ -148,6 +152,8 @@ public class GameController{
             gameSummary.createdAt = currentGame.getCreatedAt();
             gameSummary.startedAt = currentGame.getStartedAt();
             gameSummary.finishedAt = currentGame.getFinishedAt();
+            gameSummary.durationSeconds = gameService.getGameDurationSeconds();
+            gameSummary.remainingSeconds = gameService.getRemainingSeconds(currentGame);
             return gameSummary;
         }
     }
@@ -256,7 +262,7 @@ public class GameController{
         }
 
         Game game = gameService.createGame(request.mode,request.playerId);
-        return GameResponse.GameSummaryDTO(game);
+        return GameResponse.GameSummaryDTO(game, gameService);
     }
 
     /**
@@ -280,7 +286,7 @@ public class GameController{
         }
 
         Game game = gameService.joinGame(gameId, request.playerId);
-        return GameResponse.GameSummaryDTO(game);
+        return GameResponse.GameSummaryDTO(game, gameService);
     }
 
     /**
@@ -311,7 +317,7 @@ public class GameController{
         if (game == null) {
             throw new ResponseStatusException(NOT_FOUND, "Game id not found");
         }
-        return GameResponse.GameSummaryDTO(game);
+        return GameResponse.GameSummaryDTO(game, gameService);
     }
 
     /**
@@ -349,6 +355,16 @@ public class GameController{
         }
         if (request.word == null) {
             throw new ResponseStatusException(BAD_REQUEST, "word is required");
+        }
+
+        Game game = gameService.getGame(gameId);
+
+        if (game.getStatus() != GameStatus.IN_PROGRESS || gameService.isGameExpired(game)) {            SubmitWordResponse response = new SubmitWordResponse();
+            response.accepted = false;
+            response.reason = "GAME_NOT_IN_PROGRESS";
+            response.normalizedWord = request.word;
+            response.points = null;
+            return response;
         }
 
         WordSubmissionService.Result result =
