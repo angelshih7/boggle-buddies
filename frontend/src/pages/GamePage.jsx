@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { clearExpiredSession } from '../utils/session';
 import './GamePage.css';
+import WordsModel from '../components/WordsModal';
 
 /**
  * Placeholder letters used only during local development.
@@ -70,6 +71,8 @@ export default function GamePage() {
   const [gameStatus, setGameStatus]     = useState('IN_PROGRESS');
   const [remainingTime, setRemainingTime] = useState(180);
   const [showRules, setShowRules]       = useState(false);
+  const [showModal, setShowModal]       = useState(false);
+  const [allBoardWords, setAllBoardWords] = useState([]);
   const isGameOver = gameStatus === 'FINISHED' || remainingTime <= 0;
 
   const isDraggingRef = useRef(false);
@@ -84,6 +87,8 @@ export default function GamePage() {
     pathRef.current = newPath;
     setSelectedPath([...newPath]);
   };
+
+
 
   // ---- Found Word Fetching Logic ---------------------------------------
 
@@ -100,6 +105,20 @@ export default function GamePage() {
     }
   }, [gameId, playerId]);
 
+
+  const fetchWords = useCallback(async () => {
+    if(gameId == null) return;
+    try{
+      const res = await fetch(`/api/game/${gameId}/board/words`);
+      if(res.ok){
+        const data = await res.json();
+        setAllBoardWords(data);
+      }
+
+    }catch(err){
+      console.error("Error fetching words:", err);
+    }
+  }, [gameId]);
   /** * Poll for new words. Wrapping the call in a function inside the effect
    * satisfies the linter by avoiding synchronous setState calls during render.
    */
@@ -138,6 +157,17 @@ useEffect(() => {
 
   return () => clearInterval(interval);
 }, [gameId]);
+
+  // ---- Show modal when game ends ----------------------------------------
+
+  useEffect(() => {
+    if (!isGameOver) return;
+    const show = async () => {
+      await fetchWords();
+      setShowModal(true);
+    };
+    show();
+  }, [isGameOver, fetchWords]);
 
   // ---- Drag logic -------------------------------------------------------
 
@@ -281,7 +311,7 @@ useEffect(() => {
           )}
 
           <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
-          <button className="rules-btn" onClick={() => navigate('/home')}>⌂ Home</button>
+          <button className="rules-btn" onClick={async () => { await fetchWords(); setShowModal(true); }}>⌂ Home</button>
 
           <div className="found-words-container">
             <div className="found-words-list">
@@ -339,6 +369,8 @@ useEffect(() => {
             })}
           </div>
         </main>
+
+        {showModal && <WordsModel words={allBoardWords} />}
       </div>
 
       {showRules && (
