@@ -73,6 +73,7 @@ export default function GamePage() {
   const [showRules, setShowRules]       = useState(false);
   const [showModal, setShowModal]       = useState(false);
   const [allBoardWords, setAllBoardWords] = useState([]);
+  const [comparison, setComparison]     = useState(null);
   const isGameOver = gameStatus === 'FINISHED' || remainingTime <= 0;
 
   const isDraggingRef = useRef(false);
@@ -107,18 +108,18 @@ export default function GamePage() {
 
 
   const fetchWords = useCallback(async () => {
-    if(gameId == null) return;
-    try{
-      const res = await fetch(`/api/game/${gameId}/board/words`);
-      if(res.ok){
-        const data = await res.json();
-        setAllBoardWords(data);
-      }
-
-    }catch(err){
-      console.error("Error fetching words:", err);
+    if (gameId == null || playerId == null) return;
+    try {
+      const [boardRes, compRes] = await Promise.all([
+        fetch(`/api/game/${gameId}/board/words`),
+        fetch(`/api/game/${gameId}/player/${playerId}/word-comparison`),
+      ]);
+      if (boardRes.ok) setAllBoardWords(await boardRes.json());
+      if (compRes.ok)  setComparison(await compRes.json());
+    } catch (err) {
+      console.error('Error fetching words:', err);
     }
-  }, [gameId]);
+  }, [gameId, playerId]);
   /** * Poll for new words. Wrapping the call in a function inside the effect
    * satisfies the linter by avoiding synchronous setState calls during render.
    */
@@ -370,7 +371,7 @@ useEffect(() => {
           </div>
         </main>
 
-        {showModal && <WordsModel words={allBoardWords} />}
+        {showModal && <WordsModel boardWords={allBoardWords} comparison={comparison} />}
       </div>
 
       {showRules && (
