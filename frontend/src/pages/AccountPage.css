@@ -113,6 +113,64 @@
   color: #ffffff;
 }
 
+/* ── Avatar image ── */
+.account-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ── Avatar picker ── */
+.avatar-picker {
+  width: 320px;
+}
+
+.avatar-picker-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 10px;
+  text-align: center;
+}
+
+.avatar-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.avatar-option {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease;
+  overflow: hidden;
+}
+
+.avatar-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.avatar-option:hover {
+  transform: translateY(-3px);
+}
+
+.avatar-option--active {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 2px #4a5fc1;
+}
+
 /* ── Sign out button ── */
 .account-signout-btn {
   margin-top: 8px;

@@ -58,9 +58,10 @@ function formatTime(totalSeconds = 0) {
 export default function GamePage() {
   const location   = useLocation();
   const navigate   = useNavigate();
-  const playerName = location.state?.playerName ?? 'Guest';
-  const gameId     = location.state?.gameId   ?? null;
-  const playerId   = location.state?.playerId ?? null;
+  const playerName    = location.state?.playerName ?? 'Guest';
+  const gameId        = location.state?.gameId   ?? null;
+  const playerId      = location.state?.playerId ?? null;
+  const profilePicture = JSON.parse(localStorage.getItem('bbUser') || 'null')?.profilePicture ?? null;
 
   const [letters, setLetters]           = useState(location.state?.letters ?? DEV_PLACEHOLDER);
   const [boardLoading, setBoardLoading] = useState(() => gameId != null);
@@ -291,7 +292,10 @@ useEffect(() => {
       <div className="game-page">
         <aside className="game-sidebar">
           <div className="player-avatar">
-            {playerName.charAt(0).toUpperCase()}
+            {profilePicture
+              ? <img src={`/avatars/${profilePicture}`} alt="avatar" className="player-avatar-img" />
+              : playerName.charAt(0).toUpperCase()
+            }
           </div>
           <h2 className="player-name">{playerName}</h2>
 

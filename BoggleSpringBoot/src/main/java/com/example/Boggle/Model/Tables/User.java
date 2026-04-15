@@ -61,8 +61,14 @@ public class User {
     @Column(name="is_guest", nullable=false)
     private boolean isGuest = false;
 
+    @Column(name="profile_picture", length=50)
+    private String profilePicture;
+
     public boolean isGuest() { return isGuest; }
     public void setGuest(boolean guest) { isGuest = guest; }
+
+    public String getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
 
     //Constructor
     protected User() {
