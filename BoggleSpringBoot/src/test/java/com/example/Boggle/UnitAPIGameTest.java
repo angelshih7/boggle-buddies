@@ -94,44 +94,6 @@ public class UnitAPIGameTest {
     }
 
     /**
-     * Verifies that creating a bot game assigns the bot as the 2nd player
-     * and returns the correct game response
-     */
-    @Test
-    void TestCreateGameBot() {
-        User currentUser = new User("Diego9", "diego@test.com", "Secret123");
-        currentUser.setId(2);
-
-        User userBot = new User("bot", "bot@boggle.local", "BOT");
-        userBot.setId(3);
-
-        Board board = new Board();
-        board.setBoardId("board-bot");
-        board.setBoardString("ABCD\nEFGH\nIJKL\nMNOP");
-
-        Game savedGame = new Game(currentUser, userBot, board);
-        savedGame.setId(11);
-        savedGame.setStatus(GameStatus.IN_PROGRESS);
-
-        GameController.CreateGameRequest req = new GameController.CreateGameRequest();
-        req.playerId = 2;
-        req.mode = GameController.GameMode.BOT;
-
-        when(gameService.createGame(GameController.GameMode.BOT, 2)).thenReturn(savedGame);
-
-        GameController.GameResponse response = gameController.createGame(req);
-
-        assertNotNull(response);
-        assertEquals(11, response.gameId);
-        assertEquals(2, response.player1Id);
-        assertEquals(3, response.player2Id);
-        assertEquals("board-bot", response.boardId);
-        assertEquals("IN_PROGRESS", response.status);
-
-        verify(gameService).createGame(GameController.GameMode.BOT, 2);
-    }
-
-    /**
      * Verifies that creating a multiplayer game places the game
      * in waiting status until another player joins.
      */

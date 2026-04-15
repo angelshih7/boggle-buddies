@@ -25,7 +25,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
  * Service responsible for creating, joining, and retrieving Boggle games
  * and their associated boards.
  *
- * <p>This service handles solo, bot, and multiplayer game setup, validates
+ * <p>This service handles solo and multiplayer game setup, validates
  * player existence, creates randomized boards, and manages state changes
  * when players join multiplayer games.
  */
@@ -44,7 +44,7 @@ public class GameService {
      *
      * @param gameRepository repository storing game records
      * @param boardRepository repository storing generated boards
-     * @param userRepository repository storing players and bot users
+     * @param userRepository repository storing players
      */
     public GameService(GameRepository gameRepository,
                        BoardRepository boardRepository,
@@ -57,7 +57,7 @@ public class GameService {
     /**
      * Creates a new game for the given player and mode.
      *
-     * <p>Solo and bot games begin immediately. Multiplayer games are created
+     * <p>Solo games begin immediately. Multiplayer games are created
      * in a waiting state until a second player joins.
      *
      * @param mode the requested game mode
