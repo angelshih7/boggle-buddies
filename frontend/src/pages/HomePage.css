@@ -27,6 +27,14 @@
   margin-bottom: 4px;
 }
 
+/** Avatar image */
+.home-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 /** Player name */
 .home-username {
   font-size: 1.4rem;
