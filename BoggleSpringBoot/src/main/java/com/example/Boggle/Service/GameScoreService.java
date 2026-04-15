@@ -69,7 +69,7 @@ public class GameScoreService {
     /**
      * Computes the current score totals for a game.
      *
-     * @param gameId the ID of the game; may refer to a SOLO, BOT, or MULTIPLAYER game
+     * @param gameId the ID of the game; may refer to a SOLO or MULTIPLAYER game
      * @return a Totals object containing both player IDs, their scores, and the current winner
      */
     @Transactional()
@@ -107,7 +107,7 @@ public class GameScoreService {
      * Finalizes the game, sets its status to FINISHED, records the completion time,
      * and stores the winning player based on the final score totals.
      *
-     * @param gameId the ID of the game; may refer to a SOLO, BOT, or MULTIPLAYER game
+     * @param gameId the ID of the game; may refer to a SOLO or MULTIPLAYER game
      * @return a Totals object containing both player IDs, their scores, and the current winner
      */
     @Transactional
