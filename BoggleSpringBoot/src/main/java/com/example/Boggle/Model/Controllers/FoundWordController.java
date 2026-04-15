@@ -1,5 +1,6 @@
 package com.example.Boggle.Model.Controllers;
 import com.example.Boggle.Model.Tables.FoundWord;
+import com.example.Boggle.Service.WordComparisonService;
 import com.example.Boggle.repository.FoundWordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,9 @@ public class FoundWordController {
 
     @Autowired
     private FoundWordRepository foundWordRepository;
+
+    @Autowired
+    private WordComparisonService wordComparisonService;
 
     /**
      * GET /api/game/{gameId}/player/{playerId}/words
@@ -40,5 +44,17 @@ public class FoundWordController {
                 .toList();
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /api/game/{gameId}/player/{playerId}/word-comparison
+     * Returns all valid words on the board split into foundWords and missedWords
+     * based on what the player submitted during the game.
+     */
+    @GetMapping("/{gameId}/player/{playerId}/word-comparison")
+    public ResponseEntity<WordComparisonService.ComparisonResult> getWordComparison(
+            @PathVariable Integer gameId,
+            @PathVariable Integer playerId) {
+        return ResponseEntity.ok(wordComparisonService.compare(gameId, playerId));
     }
 }

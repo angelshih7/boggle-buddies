@@ -50,7 +50,7 @@ public class GameServiceTest {
     private BoardRepository boardRepository;
 
     /**
-     * Mocked repository used for player lookup and bot creation.
+     * Mocked repository used for player lookup.
      */
     @Mock
     private UserRepository userRepository;
