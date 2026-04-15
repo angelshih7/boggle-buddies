@@ -129,7 +129,16 @@ public class GameController{
          */
         public LocalDateTime finishedAt;
 
+        /**
+         * Total round duration in seconds
+         * Frontend clients can use this for timer setup or reset logic
+         */
         public Long durationSeconds;
+
+        /**
+         * Number of seconds remaining in the current round
+         * This value is capped at 0 once time has expired
+         */
         public Long remainingSeconds;
 
         /**
