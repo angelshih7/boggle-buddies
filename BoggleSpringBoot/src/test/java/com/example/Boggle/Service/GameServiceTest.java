@@ -12,7 +12,6 @@ import com.example.Boggle.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -73,11 +72,6 @@ public class GameServiceTest {
     private User player2;
 
     /**
-     * Sample bot user used for BOT mode tests.
-     */
-    private User botUser;
-
-    /**
      * Sample board returned by the mocked board repository.
      */
     private Board savedBoard;
@@ -92,10 +86,6 @@ public class GameServiceTest {
 
         player2 = new User("James","james@test.com","password123");
         player2.setId(2);
-
-        botUser = new User("bot","bot@boggle.local","BOT");
-        botUser.setId(3);
-        botUser.setGuest(true);
 
         savedBoard = new Board();
         savedBoard.setBoardId("board-1");
@@ -131,78 +121,6 @@ public class GameServiceTest {
         verify(userRepository).findById(playerId);
         verify(boardRepository).save(any(Board.class));
         verify(gameRepository).save(any(Game.class));
-
-    }
-
-    /**
-     * Verify game creation with existing bot user
-     */
-    @Test
-    void testCreateGameWithExistingBot(){
-        Integer player1Id = 1;
-        GameController.GameMode mode = GameController.GameMode.BOT;
-        when(userRepository.findById(1)).thenReturn(Optional.of(player1));
-        when(userRepository.findByUsername("bot")).thenReturn(Optional.of(botUser));
-        when(boardRepository.save(any(Board.class))).thenReturn(savedBoard);
-        when(gameRepository.save(any(Game.class))).thenAnswer(
-                mockedResult -> {
-                    Game game = mockedResult.getArgument(0);
-                    return game;
-                });
-
-        Game result = gameService.createGame(mode,player1Id);
-
-        assertNotNull(result);
-        assertEquals(player1Id,result.getPlayer1().getId());
-        assertEquals(GameStatus.IN_PROGRESS,result.getStatus());
-        assertEquals( botUser,result.getPlayer2());
-        assertEquals(player1,result.getPlayer1());
-        assertNotNull(result.getStartedAt());
-        assertNull(result.getFinishedAt());
-
-        verify(userRepository).findByUsername("bot");
-        verify(userRepository).findById(player1Id);
-        verify(boardRepository).save(any(Board.class));
-        verify(gameRepository).save(any(Game.class));
-
-    }
-
-    /**
-     * Verify game creation with non-existing bot user
-     */
-    @Test
-    void testCreateGameBotNoBot(){
-        Integer player1Id = 1;
-        GameController.GameMode mode = GameController.GameMode.BOT;
-
-        when(userRepository.findById(1)).thenReturn(Optional.of(player1));
-        when(userRepository.findByUsername("bot")).thenReturn(Optional.empty());
-
-        when(userRepository.save(any(User.class))).thenReturn(botUser);
-
-        when(boardRepository.save(any(Board.class))).thenReturn(savedBoard);
-        when(gameRepository.save(any(Game.class))).thenAnswer(
-                mockedResult -> {
-                    Game game = mockedResult.getArgument(0);
-                    return game;
-                });
-
-        Game result = gameService.createGame(mode,player1Id);
-
-        assertNotNull(result);
-        assertEquals(player1, result.getPlayer1());
-        assertEquals(botUser, result.getPlayer2());
-        assertEquals(savedBoard, result.getBoard());
-        assertEquals(GameStatus.IN_PROGRESS, result.getStatus());
-
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
-
-        User createdBot = userCaptor.getValue();
-        assertNotNull(createdBot);
-        assertEquals("bot", createdBot.getUsername());
-        assertEquals("bot@boggle.local", createdBot.getEmail());
-        assertTrue(createdBot.isGuest());
 
     }
 

@@ -51,7 +51,7 @@ public class GameController{
     /**
      * Supported game modes for game creation.
      */
-    public enum GameMode {SOLO, BOT, MULTIPLAYER}
+    public enum GameMode {SOLO, MULTIPLAYER}
 
     /**
      * Request body for creating a new game.

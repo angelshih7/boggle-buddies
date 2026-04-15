@@ -79,11 +79,6 @@ public class GameService {
                 game.setStatus(GameStatus.IN_PROGRESS);
                 game.setStartedAt(LocalDateTime.now());
             }
-            case BOT -> {
-                game = new Game(p1, getOrCreateBot(), createAndSaveBoard());
-                game.setStatus(GameStatus.IN_PROGRESS);
-                game.setStartedAt(LocalDateTime.now());
-            }
             case MULTIPLAYER -> {
                 game = new Game(p1, null, createAndSaveBoard());
                 game.setStatus(GameStatus.WAITING);
@@ -170,20 +165,6 @@ public class GameService {
         board.setBoardString(flattened);
 
         return boardRepository.save(board);
-    }
-
-    /**
-     * Retrieves the bot user if it already exists, or creates and saves it otherwise.
-     *
-     * @return the existing or newly created bot user
-     */
-    private User getOrCreateBot() {
-        return userRepository.findByUsername("bot")
-                .orElseGet(() -> {
-                    User bot = new User("bot", "bot@boggle.local", "BOT");
-                    bot.setGuest(true);
-                    return userRepository.save(bot);
-                });
     }
 
     /**
