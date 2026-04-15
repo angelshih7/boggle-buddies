@@ -82,4 +82,56 @@ public class FoundWordControllerTest {
 
         client.close();
     }
+
+    /**
+     * Verifies that the word-comparison endpoint returns a 200 response
+     * containing both foundWords and missedWords fields for a given player and game.
+     */
+    @Test
+    void testGetWordComparison() throws Exception {
+        // 1. Setup player
+        User player = new User("bob", "bob@test.com", "password123");
+        player = userRepository.save(player);
+
+        // 2. Setup board with known letters so FindWordsService can run
+        Board board = new Board();
+        board.setBoardId("board-cmp-1");
+        board.setBoardString("CATS\nREAB\nDFGH\nIJKL");
+        board = boardRepository.save(board);
+
+        // 3. Setup game
+        Game game = new Game(player, null, board);
+        game.setStatus(GameStatus.IN_PROGRESS);
+        game = gameRepository.save(game);
+
+        // 4. Setup a dictionary word and mark it as found by the player
+        Dictionary word = new Dictionary();
+        word.setWord("CAT");
+        word.setPointValue(2);
+        word = dictionaryRepository.save(word);
+
+        FoundWord foundWord = new FoundWord();
+        foundWord.setPlayer(player);
+        foundWord.setGame(game);
+        foundWord.setDictionaryWord(word);
+        foundWordRepository.save(foundWord);
+
+        // 5. Call the endpoint
+        HttpClient client = HttpClient.newHttpClient();
+        String url = String.format("http://localhost:%d/api/game/%d/player/%d/word-comparison",
+                port, game.getId(), player.getId());
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(200, response.statusCode());
+        assertTrue(response.body().contains("foundWords"));
+        assertTrue(response.body().contains("missedWords"));
+
+        client.close();
+    }
 }
