@@ -80,6 +80,9 @@ public class UnitAPIGameTest {
 
         when(gameService.createGame(GameController.GameMode.SOLO, 2)).thenReturn(savedGame);
 
+        when(gameService.getGameDurationSeconds()).thenReturn(180L);
+        when(gameService.getRemainingSeconds(savedGame)).thenReturn(120L);
+
         GameController.GameResponse response = gameController.createGame(req);
 
         assertNotNull(response);
@@ -88,6 +91,9 @@ public class UnitAPIGameTest {
         assertNull(response.player2Id);
         assertEquals("board-123", response.boardId);
         assertEquals("IN_PROGRESS", response.status);
+
+        assertEquals(180L, response.durationSeconds);
+        assertEquals(120L, response.remainingSeconds);
 
         verify(gameService).createGame(GameController.GameMode.SOLO, 2);
         verifyNoInteractions(gameScoreService, wordSubmissionService);
@@ -119,6 +125,9 @@ public class UnitAPIGameTest {
 
         when(gameService.createGame(GameController.GameMode.BOT, 2)).thenReturn(savedGame);
 
+        when(gameService.getGameDurationSeconds()).thenReturn(180L);
+        when(gameService.getRemainingSeconds(savedGame)).thenReturn(180L);
+
         GameController.GameResponse response = gameController.createGame(req);
 
         assertNotNull(response);
@@ -127,6 +136,9 @@ public class UnitAPIGameTest {
         assertEquals(3, response.player2Id);
         assertEquals("board-bot", response.boardId);
         assertEquals("IN_PROGRESS", response.status);
+
+        assertEquals(180L, response.durationSeconds);
+        assertEquals(180L, response.remainingSeconds);
 
         verify(gameService).createGame(GameController.GameMode.BOT, 2);
     }
@@ -154,6 +166,9 @@ public class UnitAPIGameTest {
 
         when(gameService.createGame(GameController.GameMode.MULTIPLAYER, 2)).thenReturn(savedGame);
 
+        when(gameService.getGameDurationSeconds()).thenReturn(180L);
+        when(gameService.getRemainingSeconds(savedGame)).thenReturn(180L);
+
         GameController.GameResponse response = gameController.createGame(req);
 
         assertNotNull(response);
@@ -162,6 +177,9 @@ public class UnitAPIGameTest {
         assertEquals(2, response.player1Id);
         assertNull(response.player2Id);
         assertEquals("WAITING", response.status);
+
+        assertEquals(180L, response.durationSeconds);
+        assertEquals(180L, response.remainingSeconds);
 
         verify(gameService).createGame(GameController.GameMode.MULTIPLAYER, 2);
     }
@@ -191,6 +209,9 @@ public class UnitAPIGameTest {
 
         when(gameService.joinGame(20, 2)).thenReturn(savedGame);
 
+        when(gameService.getGameDurationSeconds()).thenReturn(180L);
+        when(gameService.getRemainingSeconds(savedGame)).thenReturn(175L);
+
         GameController.GameResponse response = gameController.joinGame(20, req);
 
         assertNotNull(response);
@@ -199,6 +220,9 @@ public class UnitAPIGameTest {
         assertEquals(2, response.player2Id);
         assertEquals("Board-join", response.boardId);
         assertEquals("IN_PROGRESS", response.status);
+
+        assertEquals(180L, response.durationSeconds);
+        assertEquals(175L, response.remainingSeconds);
 
         verify(gameService).joinGame(20, 2);
     }
@@ -372,6 +396,9 @@ public class UnitAPIGameTest {
 
         when(gameService.getGame(50)).thenReturn(game);
 
+        when(gameService.getGameDurationSeconds()).thenReturn(180L);
+        when(gameService.getRemainingSeconds(game)).thenReturn(90L);
+
         GameController.GameResponse response = gameController.getGame(50);
 
         assertNotNull(response);
@@ -380,6 +407,9 @@ public class UnitAPIGameTest {
         assertEquals(2, response.player2Id);
         assertEquals("board_4", response.boardId);
         assertEquals("IN_PROGRESS", response.status);
+
+        assertEquals(180L, response.durationSeconds);
+        assertEquals(90L, response.remainingSeconds);
 
         verify(gameService).getGame(50);
     }
@@ -688,5 +718,52 @@ public class UnitAPIGameTest {
         assertEquals(8, response.player2Points);
         assertNull(response.winnerPlayerId);
         assertEquals("IN_PROGRESS", response.status);
+    }
+
+    /**
+     * Verifies that expired games reject word submissions with GAME_NOT_IN_PROGRESS.
+     */
+    @Test
+    void testSubmitWordRejectedWhenGameExpired() {
+        GameController.SubmitWordRequest req = new GameController.SubmitWordRequest();
+        req.playerId = 1;
+        req.word = "cat";
+
+        Game mockGame = mock(Game.class);
+        when(mockGame.getStatus()).thenReturn(GameStatus.IN_PROGRESS);
+        when(gameService.getGame(5)).thenReturn(mockGame);
+        when(gameService.isGameExpired(mockGame)).thenReturn(true);
+
+        GameController.SubmitWordResponse response = gameController.submitWord(5, req);
+
+        assertFalse(response.accepted);
+        assertEquals("GAME_NOT_IN_PROGRESS", response.reason);
+        assertEquals("cat", response.normalizedWord);
+        assertNull(response.points);
+
+        verify(wordSubmissionService, never()).submitWord(anyInt(), anyInt(), anyString());
+    }
+
+    /**
+     * Verifies that finished games reject word submissions with GAME_NOT_IN_PROGRESS.
+     */
+    @Test
+    void testSubmitWordRejectedWhenGameAlreadyFinished() {
+        GameController.SubmitWordRequest req = new GameController.SubmitWordRequest();
+        req.playerId = 1;
+        req.word = "cat";
+
+        Game mockGame = mock(Game.class);
+        when(mockGame.getStatus()).thenReturn(GameStatus.FINISHED);
+        when(gameService.getGame(5)).thenReturn(mockGame);
+
+        GameController.SubmitWordResponse response = gameController.submitWord(5, req);
+
+        assertFalse(response.accepted);
+        assertEquals("GAME_NOT_IN_PROGRESS", response.reason);
+        assertEquals("cat", response.normalizedWord);
+        assertNull(response.points);
+
+        verify(wordSubmissionService, never()).submitWord(anyInt(), anyInt(), anyString());
     }
 }
