@@ -368,7 +368,8 @@ public class GameController{
 
         Game game = gameService.getGame(gameId);
 
-        if (game.getStatus() != GameStatus.IN_PROGRESS || gameService.isGameExpired(game)) {            SubmitWordResponse response = new SubmitWordResponse();
+        if (game.getStatus() != GameStatus.IN_PROGRESS || gameService.isGameExpired(game)) {
+            SubmitWordResponse response = new SubmitWordResponse();
             response.accepted = false;
             response.reason = "GAME_NOT_IN_PROGRESS";
             response.normalizedWord = request.word;
