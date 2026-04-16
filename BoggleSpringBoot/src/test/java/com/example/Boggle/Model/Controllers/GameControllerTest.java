@@ -1,7 +1,5 @@
-package com.example.Boggle;
+package com.example.Boggle.Model.Controllers;
 
-import com.example.Boggle.Model.Controllers.GameController;
-import com.example.Boggle.Model.Controllers.UserController;
 import com.example.Boggle.Model.Tables.Board;
 import com.example.Boggle.Model.Tables.Game;
 import com.example.Boggle.Model.Tables.GameStatus;
@@ -9,10 +7,6 @@ import com.example.Boggle.Model.Tables.User;
 import com.example.Boggle.Service.GameScoreService;
 import com.example.Boggle.Service.GameService;
 import com.example.Boggle.Service.WordSubmissionService;
-import com.example.Boggle.repository.BoardRepository;
-import com.example.Boggle.repository.FoundWordRepository;
-import com.example.Boggle.repository.GameRepository;
-import com.example.Boggle.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -20,7 +14,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.AssertionsKt.assertNotNull;
@@ -33,7 +26,8 @@ import static org.mockito.Mockito.*;
  * These test verify game creation, multiplayer joining,
  * and board retrieval behavior using mocked repositories.
  */
-public class UnitAPIGameTest {
+@MockitoBean
+public class GameControllerTest {
 
     private GameController gameController;
     private GameService gameService;
