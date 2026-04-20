@@ -58,9 +58,10 @@ function formatTime(totalSeconds = 0) {
 export default function GamePage() {
   const location   = useLocation();
   const navigate   = useNavigate();
-  const playerName = location.state?.playerName ?? 'Guest';
-  const gameId     = location.state?.gameId   ?? null;
-  const playerId   = location.state?.playerId ?? null;
+  const playerName    = location.state?.playerName ?? 'Guest';
+  const gameId        = location.state?.gameId   ?? null;
+  const playerId      = location.state?.playerId ?? null;
+  const profilePicture = JSON.parse(localStorage.getItem('bbUser') || 'null')?.profilePicture ?? null;
 
   /** New: Extract opponent ID from routing state for end-game comparison */
   const opponentId = location.state?.opponentId ?? null;
@@ -319,13 +320,32 @@ export default function GamePage() {
   }
 
   return (
-      <>
-        <div className="game-page">
-          <aside className="game-sidebar">
-            <div className="player-avatar">
-              {playerName.charAt(0).toUpperCase()}
+    <>
+      <div className="game-page">
+        <aside className="game-sidebar">
+          <div className="player-avatar">
+            {profilePicture
+              ? <img src={`/avatars/${profilePicture}`} alt="avatar" className="player-avatar-img" />
+              : playerName.charAt(0).toUpperCase()
+            }
+          </div>
+          <h2 className="player-name">{playerName}</h2>
+
+          <div className="score-section">
+            <span className="score-label">Score</span>
+            <span className="score-value">{score}</span>
+          </div>
+          <div className="score-section">
+            <span className="score-label">Time Left</span>
+            <span className="score-value">{formatTime(remainingTime)}</span>
+          </div>
+
+          {isGameOver && (
+            <div className="word-feedback word-feedback--bad">
+              Time’s up! Round over.
             </div>
-            <h2 className="player-name">{playerName}</h2>
+          )}
+          <h2 className="player-name">{playerName}</h2>
 
             <div className="score-section">
               <span className="score-label">Score</span>
@@ -344,7 +364,7 @@ export default function GamePage() {
 
             <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
 
-            {/** Refactored Home button to also allow board word lookup */}
+            {/* Refactored Home button to also allow board word lookup */}
             <button className="rules-btn" onClick={async () => { await fetchWords(); setShowModal(true); }}>⌂ Board Words</button>
 
             <div className="found-words-container">

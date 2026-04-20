@@ -101,6 +101,11 @@ public class UserController {
         public String email;
 
         /**
+         * The profile picture filename, or null if none selected.
+         */
+        public String profilePicture;
+
+        /**
          * Builds a response DTO from a user entity
          *
          * @param u the user entity
@@ -111,9 +116,20 @@ public class UserController {
             out.id = u.getId();
             out.username = u.getUsername();
             out.email = u.getEmail();
+            out.profilePicture = u.getProfilePicture();
 
             return out;
         }
+    }
+
+    /**
+     * Request body for updating a user's profile picture.
+     */
+    public static class UpdateAvatarRequest {
+        /**
+         * The filename of the selected avatar (e.g. "avatar_bear.png").
+         */
+        public String profilePicture;
     }
 
     /**
@@ -217,6 +233,34 @@ public class UserController {
             u = userRepository.save(u);
             return UserResponse.userDTO(u);
         }
+    }
+
+    private static final java.util.Set<String> ALLOWED_AVATARS = java.util.Set.of(
+        "avatar_bear.png", "avatar_blocks.png", "avatar_cube.png",
+        "avatar_fox.png", "avatar_hourglass.png", "avatar_owl.png", "avatar_robot.png"
+    );
+
+    /**
+     * Updates the profile picture for an existing user.
+     *
+     * @param userId the ID of the user to update
+     * @param req    the request containing the chosen avatar filename
+     * @return the updated user response
+     * @throws ResponseStatusException if the user is not found or the avatar is invalid
+     */
+    @PutMapping("/{userId}/avatar")
+    public UserResponse updateAvatar(@PathVariable Integer userId,
+                                     @RequestBody UpdateAvatarRequest req) {
+        if (req == null || req.profilePicture == null || req.profilePicture.isBlank())
+            throw new ResponseStatusException(BAD_REQUEST, "profilePicture is required");
+        if (!ALLOWED_AVATARS.contains(req.profilePicture.trim()))
+            throw new ResponseStatusException(BAD_REQUEST, "Invalid profile picture");
+
+        User u = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "User not found"));
+        u.setProfilePicture(req.profilePicture.trim());
+        u = userRepository.save(u);
+        return UserResponse.userDTO(u);
     }
 
     /**

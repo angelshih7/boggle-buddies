@@ -107,7 +107,12 @@ export default function HomePage() {
 
     return (
         <div className="home-page">
-            <div className="home-avatar">{playerName.charAt(0).toUpperCase()}</div>
+            <div className="home-avatar">
+                {user?.profilePicture
+                    ? <img src={`/avatars/${user.profilePicture}`} alt="avatar" className="home-avatar-img" />
+                    : playerName.charAt(0).toUpperCase()
+                }
+            </div>
             <h1 className="home-username">{playerName}</h1>
 
             <div className="home-buttons">
