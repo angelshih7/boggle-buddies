@@ -184,10 +184,27 @@ public class GameService {
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, fieldName + " not found"));
     }
 
+    /**
+     * Returns the fixed duration of a Boggle round in seconds.
+     *
+     * This is exposed to the controller so the frontend can display or
+     * initialize the round timer consistently with backend rules.
+     *
+     * @return total round duration in seconds
+     */
     public long getGameDurationSeconds() {
         return GAME_DURATION_SECONDS;
     }
 
+    /**
+     * Calculates how many seconds remain in the current game.
+     *
+     * If the game has not started yet, the full duration is returned.
+     * Once the timer reaches zero, this method never returns a negative value.
+     *
+     * @param game the game whose remaining time should be calculated
+     * @return remaining time in seconds, minimum 0
+     */
     public long getRemainingSeconds(Game game) {
         if (game.getStartedAt() == null) {
             return GAME_DURATION_SECONDS;
@@ -199,10 +216,26 @@ public class GameService {
         return Math.max(remaining, 0);
     }
 
+    /**
+     * Determines whether a started game has run out of time.
+     *
+     * @param game the game to check
+     * @return true if the game has started and no time remains
+     */
     public boolean isGameExpired(Game game) {
         return game.getStartedAt() != null && getRemainingSeconds(game) <= 0;
     }
 
+    /**
+     * Updates an in-progress game to FINISHED when its timer has expired.
+     *
+     * If the game is expired and still marked IN_PROGRESS, the finished time is
+     * recorded and the updated game is saved. Non-expired games are returned
+     * unchanged.
+     *
+     * @param game the game to inspect and update if needed
+     * @return the saved expired game, or the original game if no update was needed
+     */
     public Game updateGameStatusIfExpired(Game game) {
         if (game.getStatus() == GameStatus.IN_PROGRESS && isGameExpired(game)) {
             game.setStatus(GameStatus.FINISHED);

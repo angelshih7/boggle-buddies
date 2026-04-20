@@ -129,7 +129,16 @@ public class GameController{
          */
         public LocalDateTime finishedAt;
 
+        /**
+         * Total round duration in seconds
+         * Frontend clients can use this for timer setup or reset logic
+         */
         public Long durationSeconds;
+
+        /**
+         * Number of seconds remaining in the current round
+         * This value is capped at 0 once time has expired
+         */
         public Long remainingSeconds;
 
         /**
@@ -359,7 +368,8 @@ public class GameController{
 
         Game game = gameService.getGame(gameId);
 
-        if (game.getStatus() != GameStatus.IN_PROGRESS || gameService.isGameExpired(game)) {            SubmitWordResponse response = new SubmitWordResponse();
+        if (game.getStatus() != GameStatus.IN_PROGRESS || gameService.isGameExpired(game)) {
+            SubmitWordResponse response = new SubmitWordResponse();
             response.accepted = false;
             response.reason = "GAME_NOT_IN_PROGRESS";
             response.normalizedWord = request.word;
