@@ -165,9 +165,7 @@ export default function GamePage() {
   }, [gameId, playerId]);
 
   // ---- Recap Modal -------------------------------------------------------
-  // TODO: wire openRecap() into a game-over screen or back button
 
-  // eslint-disable-next-line no-unused-vars
   const openRecap = useCallback(async () => {
     if (gameId == null || playerId == null) return;
     try {
@@ -188,13 +186,36 @@ export default function GamePage() {
     setShowModal(true);
   }, [gameId, playerId, isMultiplayer, opponentId, fetchFoundWords]);
 
-  // ---- End Game: navigate home after brief delay ------------------------
-
+  // Auto-open recap exactly once when the game ends.
+  const recapTriggeredRef = useRef(false);
   useEffect(() => {
-    if (!isGameOver) return;
-    const timer = setTimeout(() => navigate('/home'), 3000);
-    return () => clearTimeout(timer);
-  }, [isGameOver, navigate]);
+    if (!isGameOver || recapTriggeredRef.current) return;
+    recapTriggeredRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    openRecap();
+  }, [isGameOver, openRecap]);
+
+  // ---- Play Again --------------------------------------------------------
+
+  const handlePlayAgain = useCallback(async () => {
+    const storedUser = JSON.parse(localStorage.getItem('bbUser') || 'null');
+    if (!storedUser?.id) { navigate('/home'); return; }
+    const mode = isMultiplayer ? 'MULTIPLAYER' : 'SOLO';
+    try {
+      const res = await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode, playerId: storedUser.id }),
+      });
+      if (!res.ok) { navigate('/home'); return; }
+      const data = await res.json();
+      navigate('/game', {
+        state: { playerName, gameId: data.gameId, playerId: storedUser.id },
+      });
+    } catch {
+      navigate('/home');
+    }
+  }, [isMultiplayer, navigate, playerName]);
 
   // ---- Drag logic -------------------------------------------------------
 
@@ -339,14 +360,11 @@ export default function GamePage() {
             <span className="score-value">{formatTime(remainingTime)}</span>
           </div>
 
-          {isGameOver && (
-            <div className="word-feedback word-feedback--bad">
-              Time&apos;s up! Returning home&hellip;
-            </div>
-          )}
-
+          <button className="rules-btn" onClick={() => { if (window.confirm('Leave the game and go home?')) navigate('/home'); }}>&#8592; Home</button>
           <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
-          {/* TODO: call openRecap() here to show the game recap modal (e.g. on game over screen or back button) */}
+          {isGameOver && (
+            <button className="rules-btn" onClick={openRecap}>Recap</button>
+          )}
 
           <div className="found-words-container">
             <div className="found-words-list">
@@ -413,7 +431,11 @@ export default function GamePage() {
           isMultiplayer={isMultiplayer}
           mySortedWords={mySortedWords}
           opponentSortedWords={opponentSortedWords}
+          score={score}
+          isGameOver={isGameOver}
           onClose={() => setShowModal(false)}
+          onHome={() => navigate('/home')}
+          onPlayAgain={handlePlayAgain}
         />
       )}
 
