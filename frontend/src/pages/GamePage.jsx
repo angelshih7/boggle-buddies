@@ -363,7 +363,7 @@ export default function GamePage() {
 
             <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
 
-            {/** Refactored Home button to also allow board word lookup */}
+            {/* Refactored Home button to also allow board word lookup */}
             <button className="rules-btn" onClick={async () => { await fetchWords(); setShowModal(true); }}>⌂ Board Words</button>
 
             <div className="found-words-container">
