@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/*
-Represents an application user entity mapped to the users table, including identity, credentials,
-and relationships to games and found words.
+/**
+ * Represents an application user entity mapped to the users table, including identity, credentials,
+ * and relationships to games and found words.
  */
 @Entity
 @Table(
