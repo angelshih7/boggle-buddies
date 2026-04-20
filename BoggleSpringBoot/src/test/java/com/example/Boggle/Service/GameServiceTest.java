@@ -19,8 +19,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -450,5 +452,146 @@ public class GameServiceTest {
         verify(gameRepository).findById(5);
     }
 
+    /**
+     * Verifies that the game duration returns the expected fixed round length.
+     */
+    @Test
+    void testGetGameDurationSeconds() {
+        assertEquals(180L, gameService.getGameDurationSeconds());
+    }
+
+    /**
+     * Verifies that a game that has not started yet returns the full remaining time.
+     */
+    @Test
+    void testGetRemainingSecondsWhenGameNotStarted() {
+        Game game = new Game();
+        game.setStartedAt(null);
+
+        long remaining = gameService.getRemainingSeconds(game);
+
+        assertEquals(180L, remaining);
+    }
+
+    /**
+     * Verifies that remaining time decreases for a started game.
+     */
+    @Test
+    void testGetRemainingSecondsForStartedGame() {
+        Game game = new Game();
+        game.setStartedAt(LocalDateTime.now().minusSeconds(30));
+
+        long remaining = gameService.getRemainingSeconds(game);
+
+        assertTrue(remaining <= 150L && remaining >= 149L);
+    }
+
+    /**
+     * Verifies that remaining time never becomes negative after expiration.
+     */
+    @Test
+    void testGetRemainingSecondsNeverNegative() {
+        Game game = new Game();
+        game.setStartedAt(LocalDateTime.now().minusSeconds(300));
+
+        long remaining = gameService.getRemainingSeconds(game);
+
+        assertEquals(0L, remaining);
+    }
+
+    /**
+     * Verifies that a game with no start time is not expired.
+     */
+    @Test
+    void testIsGameExpiredFalseWhenGameNotStarted() {
+        Game game = new Game();
+        game.setStartedAt(null);
+
+        assertFalse(gameService.isGameExpired(game));
+    }
+
+    /**
+     * Verifies that a started game becomes expired after the timer runs out.
+     */
+    @Test
+    void testIsGameExpiredTrueWhenTimeRunsOut() {
+        Game game = new Game();
+        game.setStartedAt(LocalDateTime.now().minusSeconds(181));
+
+        assertTrue(gameService.isGameExpired(game));
+    }
+
+    /**
+     * Verifies that getGame updates an expired in-progress game to finished.
+     */
+    @Test
+    void testGetGameUpdatesExpiredGameStatus() {
+        Game expiredGame = new Game(player1, null, savedBoard);
+        expiredGame.setStatus(GameStatus.IN_PROGRESS);
+        expiredGame.setStartedAt(LocalDateTime.now().minusSeconds(181));
+        expiredGame.setFinishedAt(null);
+
+        when(gameRepository.findById(5)).thenReturn(Optional.of(expiredGame));
+        when(gameRepository.save(any(Game.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Game result = gameService.getGame(5);
+
+        assertEquals(GameStatus.FINISHED, result.getStatus());
+        assertNotNull(result.getFinishedAt());
+        verify(gameRepository).save(expiredGame);
+    }
+
+    /**
+     * Verifies that updateGameStatusIfExpired marks an expired in-progress game as finished.
+     */
+    @Test
+    void testUpdateGameStatusIfExpiredMarksFinished() {
+        Game game = new Game(player1, null, savedBoard);
+        game.setStatus(GameStatus.IN_PROGRESS);
+        game.setStartedAt(LocalDateTime.now().minusSeconds(181));
+        game.setFinishedAt(null);
+
+        when(gameRepository.save(any(Game.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Game updated = gameService.updateGameStatusIfExpired(game);
+
+        assertEquals(GameStatus.FINISHED, updated.getStatus());
+        assertNotNull(updated.getFinishedAt());
+        verify(gameRepository).save(game);
+    }
+
+    /**
+     * Verifies that updateGameStatusIfExpired leaves an active game unchanged.
+     */
+    @Test
+    void testUpdateGameStatusIfExpiredLeavesActiveGameUnchanged() {
+        Game game = new Game(player1, null, savedBoard);
+        game.setStatus(GameStatus.IN_PROGRESS);
+        game.setStartedAt(LocalDateTime.now().minusSeconds(30));
+        game.setFinishedAt(null);
+
+        Game updated = gameService.updateGameStatusIfExpired(game);
+
+        assertEquals(GameStatus.IN_PROGRESS, updated.getStatus());
+        assertNull(updated.getFinishedAt());
+        verify(gameRepository, never()).save(any(Game.class));
+    }
+
+    /**
+     * Verifies that updateGameStatusIfExpired does not modify a game that is already finished.
+     */
+    @Test
+    void testUpdateGameStatusIfExpiredDoesNotChangeFinishedGame() {
+        Game game = new Game(player1, null, savedBoard);
+        game.setStatus(GameStatus.FINISHED);
+        game.setStartedAt(LocalDateTime.now().minusSeconds(181));
+        game.setFinishedAt(LocalDateTime.now().minusSeconds(1));
+
+        Game updated = gameService.updateGameStatusIfExpired(game);
+
+        assertEquals(GameStatus.FINISHED, updated.getStatus());
+        assertNotNull(updated.getFinishedAt());
+        verify(gameRepository, never()).save(any(Game.class));
+    }
 
 }
