@@ -2,11 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { clearExpiredSession } from '../utils/session';
 import './GamePage.css';
-import WordsModel from '../components/WordsModal';
+import WordsModal from '../components/WordsModal';
 
-/**
- * Placeholder letters used only during local development.
- */
 const DEV_PLACEHOLDER = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
 const GRID_SIZE = 4;
 const MIN_WORD_LENGTH = 3;
@@ -56,33 +53,31 @@ function formatTime(totalSeconds = 0) {
 // -----------------------------------------------------------------------
 
 export default function GamePage() {
-  const location   = useLocation();
-  const navigate   = useNavigate();
+  const location      = useLocation();
+  const navigate      = useNavigate();
   const playerName    = location.state?.playerName ?? 'Guest';
-  const gameId        = location.state?.gameId   ?? null;
-  const playerId      = location.state?.playerId ?? null;
+  const gameId        = location.state?.gameId     ?? null;
+  const playerId      = location.state?.playerId   ?? null;
   const profilePicture = JSON.parse(localStorage.getItem('bbUser') || 'null')?.profilePicture ?? null;
 
-  /** New: Extract opponent ID from routing state for end-game comparison */
-  const opponentId = location.state?.opponentId ?? null;
-
-  const [letters, setLetters]           = useState(location.state?.letters ?? DEV_PLACEHOLDER);
-  const [boardLoading, setBoardLoading] = useState(() => gameId != null);
-  const [score, setScore]               = useState(location.state?.score ?? 0);
-  const [selectedPath, setSelectedPath] = useState([]);
-  const [feedback, setFeedback]         = useState(null);
-  const [foundWords, setFoundWords]     = useState([]);
-  const [gameStatus, setGameStatus]     = useState('IN_PROGRESS');
+  const [letters, setLetters]             = useState(location.state?.letters ?? DEV_PLACEHOLDER);
+  const [boardLoading, setBoardLoading]   = useState(() => gameId != null);
+  const [score, setScore]                 = useState(location.state?.score ?? 0);
+  const [selectedPath, setSelectedPath]   = useState([]);
+  const [feedback, setFeedback]           = useState(null);
+  const [foundWords, setFoundWords]       = useState([]);
+  const [gameStatus, setGameStatus]       = useState('IN_PROGRESS');
   const [remainingTime, setRemainingTime] = useState(180);
-  const [showRules, setShowRules]       = useState(false);
-  const [showModal, setShowModal]       = useState(false);
-  const [allBoardWords, setAllBoardWords] = useState([]);
-
-  /** New: End-game result states for alphabetical display */
+  const [showRules, setShowRules]         = useState(false);
+  const [showModal, setShowModal]         = useState(false);
+  const [comparison, setComparison]       = useState(null);
   const [mySortedWords, setMySortedWords] = useState([]);
   const [opponentSortedWords, setOpponentSortedWords] = useState([]);
-  const [isFetchingResults, setIsFetchingResults] = useState(false);
+  const [opponentId, setOpponentId]         = useState(location.state?.opponentId ?? null);
+  const [opponentName, setOpponentName]     = useState(location.state?.opponentName ?? null);
+  const [opponentScore, setOpponentScore]   = useState(0);
 
+  const isMultiplayer = opponentId != null;
   const isGameOver = gameStatus === 'FINISHED' || remainingTime <= 0;
 
   const isDraggingRef = useRef(false);
@@ -98,11 +93,8 @@ export default function GamePage() {
     setSelectedPath([...newPath]);
   };
 
-  // ---- Found Word Fetching Logic ---------------------------------------
+  // ---- Found Word Fetching Logic ----------------------------------------
 
-  /** * Updated: Now accepts targetId to allow fetching opponent data.
-   * updateSidebar flag determines if the results should populate the main sidebar list.
-   */
   const fetchFoundWords = useCallback(async (targetId = playerId, updateSidebar = true) => {
     if (gameId == null || targetId == null) return [];
     try {
@@ -115,39 +107,34 @@ export default function GamePage() {
         return data;
       }
     } catch (err) {
-      console.error("Error fetching found words:", err);
+      console.error('Error fetching found words:', err);
     }
     return [];
   }, [gameId, playerId]);
 
-
-  const fetchWords = useCallback(async () => {
-    if(gameId == null) return;
-    try{
-      const res = await fetch(`/api/game/${gameId}/board/words`);
-      if(res.ok){
-        const data = await res.json();
-        setAllBoardWords(data);
-      }
-
-    }catch(err){
-      console.error("Error fetching words:", err);
-    }
-  }, [gameId]);
-
-  /** * Poll for new words. Wrapping the call in a function inside the effect
-   * satisfies the linter by avoiding synchronous setState calls during render.
-   */
   useEffect(() => {
-    const refreshBoard = () => {
+    const refresh = async () => {
       fetchFoundWords(playerId, true);
+      if (gameId != null && playerId != null) {
+        try {
+          const res = await fetch(`/api/game/${gameId}/score`);
+          if (res.ok) {
+            const data = await res.json();
+            const isP1     = Number(data.player1Id) === Number(playerId);
+            const myScore  = isP1 ? data.player1Points : data.player2Points;
+            const oppScore = isP1 ? data.player2Points : data.player1Points;
+            if (typeof myScore  === 'number') setScore(myScore);
+            if (typeof oppScore === 'number') setOpponentScore(oppScore);
+          }
+        } catch { /* ignore */ }
+      }
     };
-
-    refreshBoard(); // Initial fetch
-    const interval = setInterval(refreshBoard, 1000);
-
+    refresh();
+    const interval = setInterval(refresh, 1000);
     return () => clearInterval(interval);
-  }, [fetchFoundWords, playerId]);
+  }, [fetchFoundWords, playerId, gameId]);
+
+  // ---- Game State Polling -----------------------------------------------
 
   useEffect(() => {
     if (gameId == null) return;
@@ -156,12 +143,16 @@ export default function GamePage() {
       try {
         const res = await fetch(`/api/game/${gameId}`);
         if (!res.ok) return;
-
         const data = await res.json();
         setGameStatus(data.status ?? 'IN_PROGRESS');
-
         if (typeof data.remainingSeconds === 'number') {
           setRemainingTime(data.remainingSeconds);
+        }
+        if (data.player2Id != null) {
+          const isP1 = Number(data.player1Id) === Number(playerId);
+          setOpponentId(isP1 ? data.player2Id : data.player1Id);
+          const name = isP1 ? data.player2Username : data.player1Username;
+          if (name) setOpponentName(name);
         }
       } catch (err) {
         console.error('Error fetching game state:', err);
@@ -170,51 +161,51 @@ export default function GamePage() {
 
     fetchGameState();
     const interval = setInterval(fetchGameState, 1000);
-
     return () => clearInterval(interval);
-  }, [gameId]);
+  }, [gameId, playerId]);
 
-  // ---- End Game Logic --------------------------------------------------
+  // ---- Recap Modal -------------------------------------------------------
+  // TODO: wire openRecap() into a game-over screen or back button
 
-  /** * Triggered when isGameOver becomes true.
-   * Fetches all final data in parallel and sorts alphabetically by word.
-   * Empty comma in destructuring skips boardData to satisfy linter (no-unused-vars).
-   */
+  // eslint-disable-next-line no-unused-vars
+  const openRecap = useCallback(async () => {
+    if (gameId == null || playerId == null) return;
+    try {
+      const compRes = await fetch(`/api/game/${gameId}/player/${playerId}/word-comparison`);
+      if (compRes.ok) setComparison(await compRes.json());
+    } catch (err) {
+      console.error('Error fetching comparison:', err);
+    }
+    if (isMultiplayer) {
+      const sortAlpha = (a, b) => a.word.localeCompare(b.word);
+      const [myData, oppData] = await Promise.all([
+        fetchFoundWords(playerId, false),
+        fetchFoundWords(opponentId, false),
+      ]);
+      setMySortedWords([...(myData || [])].sort(sortAlpha));
+      setOpponentSortedWords([...(oppData || [])].sort(sortAlpha));
+    }
+    setShowModal(true);
+  }, [gameId, playerId, isMultiplayer, opponentId, fetchFoundWords]);
+
+  // ---- End Game: navigate home after brief delay ------------------------
+
   useEffect(() => {
     if (!isGameOver) return;
-    const loadResults = async () => {
-      setIsFetchingResults(true);
-
-      const [, myData, opponentData] = await Promise.all([
-        fetchWords(),
-        fetchFoundWords(playerId, false),
-        fetchFoundWords(opponentId, false)
-      ]);
-
-      const sortAlpha = (a, b) => a.word.localeCompare(b.word);
-
-      setMySortedWords([...(myData || [])].sort(sortAlpha));
-      setOpponentSortedWords([...(opponentData || [])].sort(sortAlpha));
-
-      setIsFetchingResults(false);
-      setShowModal(true);
-    };
-    loadResults();
-  }, [isGameOver, fetchWords, fetchFoundWords, playerId, opponentId]);
+    const timer = setTimeout(() => navigate('/home'), 3000);
+    return () => clearTimeout(timer);
+  }, [isGameOver, navigate]);
 
   // ---- Drag logic -------------------------------------------------------
 
   const enterTile = useCallback((index) => {
     if (!isDraggingRef.current || index < 0) return;
-
     const path = pathRef.current;
     const existingIdx = path.indexOf(index);
-
     if (existingIdx !== -1) {
       updatePath(path.slice(0, existingIdx + 1));
       return;
     }
-
     if (isAdjacent(path[path.length - 1], index)) {
       updatePath([...path, index]);
     }
@@ -234,7 +225,6 @@ export default function GamePage() {
       setFeedback({ word, accepted: false, reason: 'GAME_NOT_IN_PROGRESS' });
       return;
     }
-
     if (word.length < MIN_WORD_LENGTH) {
       setFeedback({ word, accepted: false, reason: 'TOO_SHORT' });
       return;
@@ -247,9 +237,7 @@ export default function GamePage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ playerId, word }),
         });
-
         const data = await res.json();
-
         setFeedback({ word, accepted: data.accepted, reason: data.reason });
 
         if (data.reason === 'PLAYER_NOT_FOUND') {
@@ -267,7 +255,6 @@ export default function GamePage() {
           setGameStatus('FINISHED');
           setRemainingTime(0);
         }
-
       } catch {
         setFeedback({ word, accepted: false, reason: 'ERROR' });
       }
@@ -279,7 +266,6 @@ export default function GamePage() {
   const finalize = useCallback(() => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
-
     const word = pathRef.current.map(i => lettersRef.current[i]).join('');
     updatePath([]);
     submitWord(word);
@@ -290,16 +276,14 @@ export default function GamePage() {
   useEffect(() => {
     if (gameId == null) return;
     const controller = new AbortController();
-
     fetch(`/api/game/${gameId}/board`, { signal: controller.signal })
-        .then(res => res.json())
-        .then(data => {
-          const parsed = data.boardString.split('\n').flatMap(row => [...row]);
-          if (parsed.length === 16) setLetters(parsed);
-        })
-        .catch(() => {})
-        .finally(() => setBoardLoading(false));
-
+      .then(res => res.json())
+      .then(data => {
+        const parsed = data.boardString.split('\n').flatMap(row => [...row]);
+        if (parsed.length === 16) setLetters(parsed);
+      })
+      .catch(() => {})
+      .finally(() => setBoardLoading(false));
     return () => controller.abort();
   }, [gameId]);
 
@@ -316,7 +300,7 @@ export default function GamePage() {
   if (feedback) {
     feedbackMod = feedback.accepted === true  ? 'ok'
         : feedback.accepted === false ? 'bad'
-            : 'dev';
+        : 'dev';
   }
 
   return (
@@ -335,6 +319,21 @@ export default function GamePage() {
             <span className="score-label">Score</span>
             <span className="score-value">{score}</span>
           </div>
+
+          {isMultiplayer && (
+            <>
+              <span className="sidebar-section-title">Opponent</span>
+              <div className="player-avatar">
+                {(opponentName ?? 'O').charAt(0).toUpperCase()}
+              </div>
+              <h2 className="player-name">{opponentName ?? '…'}</h2>
+              <div className="score-section">
+                <span className="score-label">Score</span>
+                <span className="score-value">{opponentScore}</span>
+              </div>
+            </>
+          )}
+
           <div className="score-section">
             <span className="score-label">Time Left</span>
             <span className="score-value">{formatTime(remainingTime)}</span>
@@ -342,64 +341,47 @@ export default function GamePage() {
 
           {isGameOver && (
             <div className="word-feedback word-feedback--bad">
-              Time’s up! Round over.
+              Time&apos;s up! Returning home&hellip;
             </div>
           )}
-          <h2 className="player-name">{playerName}</h2>
 
-            <div className="score-section">
-              <span className="score-label">Score</span>
-              <span className="score-value">{score}</span>
+          <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
+          {/* TODO: call openRecap() here to show the game recap modal (e.g. on game over screen or back button) */}
+
+          <div className="found-words-container">
+            <div className="found-words-list">
+              {foundWords.length > 0 ? (
+                foundWords.map((fw, idx) => (
+                  <div key={`${fw.word}-${idx}`} className="found-word-entry">
+                    <span className="found-word-text">{fw.word}</span>
+                    <span className="found-word-pts">+{fw.points}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="empty-list-text">Keep searching!</p>
+              )}
             </div>
-            <div className="score-section">
-              <span className="score-label">Time Left</span>
-              <span className="score-value">{formatTime(remainingTime)}</span>
-            </div>
+          </div>
+        </aside>
 
-            {isGameOver && (
-                <div className="word-feedback word-feedback--bad">
-                  Time’s up! Round over.
-                </div>
-            )}
+        <main className="game-main">
+          <div className="word-preview">
+            {currentWord
+              ? currentWord
+              : feedback
+                ? (
+                  <span className={`word-feedback word-feedback--${feedbackMod}`}>
+                    {feedback.word}
+                    {feedback.reason in REASON_LABEL && feedback.reason !== 'DEV_MODE'
+                      ? ` — ${REASON_LABEL[feedback.reason]}`
+                      : ''}
+                  </span>
+                )
+                : '\u00A0'}
+          </div>
 
-            <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
-
-            {/* Refactored Home button to also allow board word lookup */}
-            <button className="rules-btn" onClick={async () => { await fetchWords(); setShowModal(true); }}>⌂ Board Words</button>
-
-            <div className="found-words-container">
-              <div className="found-words-list">
-                {foundWords.length > 0 ? (
-                    foundWords.map((fw, idx) => (
-                        <div key={`${fw.word}-${idx}`} className="found-word-entry">
-                          <span className="found-word-text">{fw.word}</span>
-                          <span className="found-word-pts">+{fw.points}</span>
-                        </div>
-                    ))
-                ) : (
-                    <p className="empty-list-text">Keep searching!</p>
-                )}
-              </div>
-            </div>
-          </aside>
-
-          <main className="game-main">
-            <div className="word-preview">
-              {currentWord
-                  ? currentWord
-                  : feedback
-                      ? (
-                          <span className={`word-feedback word-feedback--${feedbackMod}`}>
-                  {feedback.word}
-                            {feedback.reason in REASON_LABEL && feedback.reason !== 'DEV_MODE'
-                                ? ` — ${REASON_LABEL[feedback.reason]}`
-                                : ''}
-                </span>
-                      )
-                      : '\u00A0'}
-            </div>
-
-            <div className={`boggle-grid${boardLoading || isGameOver ? ' boggle-grid--loading' : ''}`}>            {letters.map((letter, i) => {
+          <div className={`boggle-grid${boardLoading || isGameOver ? ' boggle-grid--loading' : ''}`}>
+            {letters.map((letter, i) => {
               const isSelected = selectedPath.includes(i);
               const isFirst    = selectedPath[0] === i;
               const classes    = [
@@ -409,85 +391,50 @@ export default function GamePage() {
               ].filter(Boolean).join(' ');
 
               return (
-                  <div
-                      key={i}
-                      className={classes}
-                      onMouseDown={() => !isGameOver && startDrag(i)}
-                      onMouseEnter={() => !isGameOver && enterTile(i)}
-                  >
-                <span className={`tile-letter${letter === 'Qu' ? ' tile-letter--qu' : ''}`}>
-                  {letter}
-                </span>
-                  </div>
+                <div
+                  key={i}
+                  className={classes}
+                  onMouseDown={() => !isGameOver && startDrag(i)}
+                  onMouseEnter={() => !isGameOver && enterTile(i)}
+                >
+                  <span className={`tile-letter${letter === 'Qu' ? ' tile-letter--qu' : ''}`}>
+                    {letter}
+                  </span>
+                </div>
               );
             })}
+          </div>
+        </main>
+      </div>
+
+      {showModal && (
+        <WordsModal
+          comparison={comparison}
+          isMultiplayer={isMultiplayer}
+          mySortedWords={mySortedWords}
+          opponentSortedWords={opponentSortedWords}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+
+      {showRules && (
+        <div className="rules-overlay" onClick={() => setShowRules(false)}>
+          <div className="rules-modal" onClick={e => e.stopPropagation()}>
+            <div className="rules-modal-header">
+              <h2 className="rules-modal-title">Rules</h2>
+              <button className="rules-modal-close" onClick={() => setShowRules(false)}>✕</button>
             </div>
-          </main>
-
-          {/** * Logic: If game is over, show the side-by-side results grid.
-           * If game is active (manual button click), show the original WordsModel.
-           */}
-          {showModal && (
-              isGameOver ? (
-                  <div className="rules-overlay" onClick={() => setShowModal(false)}>
-                    <div className="rules-modal results-modal-wide" onClick={e => e.stopPropagation()}>
-                      <div className="rules-modal-header">
-                        <h2 className="rules-modal-title">Final Results</h2>
-                        <button className="rules-modal-close" onClick={() => setShowModal(false)}>✕</button>
-                      </div>
-
-                      {isFetchingResults ? (
-                          <p className="loading-text">Tallying final scores...</p>
-                      ) : (
-                          <div className="results-grid">
-                            <div className="results-column">
-                              <h3 className="column-title">You ({mySortedWords.length})</h3>
-                              <ul className="results-list">
-                                {mySortedWords.map((fw, i) => (
-                                    <li key={i} className="results-item">
-                                      <span>{fw.word}</span> <strong>+{fw.points}</strong>
-                                    </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div className="results-column">
-                              <h3 className="column-title">Opponent ({opponentSortedWords.length})</h3>
-                              <ul className="results-list">
-                                {opponentSortedWords.map((fw, i) => (
-                                    <li key={i} className="results-item">
-                                      <span>{fw.word}</span> <strong>+{fw.points}</strong>
-                                    </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </div>
-                      )}
-                    </div>
-                  </div>
-              ) : (
-                  <WordsModel words={allBoardWords} />
-              )
-          )}
+            <ol className="rules-modal-list">
+              {RULES.map((rule, i) => (
+                <li key={i} className="rules-modal-item">
+                  <span className="rules-modal-heading">{rule.heading}</span>
+                  <span className="rules-modal-body">{rule.body}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
-
-        {showRules && (
-            <div className="rules-overlay" onClick={() => setShowRules(false)}>
-              <div className="rules-modal" onClick={e => e.stopPropagation()}>
-                <div className="rules-modal-header">
-                  <h2 className="rules-modal-title">Rules</h2>
-                  <button className="rules-modal-close" onClick={() => setShowRules(false)}>✕</button>
-                </div>
-                <ol className="rules-modal-list">
-                  {RULES.map((rule, i) => (
-                      <li key={i} className="rules-modal-item">
-                        <span className="rules-modal-heading">{rule.heading}</span>
-                        <span className="rules-modal-body">{rule.body}</span>
-                      </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-        )}
-      </>
+      )}
+    </>
   );
 }

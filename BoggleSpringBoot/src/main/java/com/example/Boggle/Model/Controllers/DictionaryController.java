@@ -3,7 +3,6 @@ import com.example.Boggle.Model.Tables.Dictionary;
 import com.example.Boggle.repository.DictionaryRepository;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatus;
 import java.util.List;
 import java.util.stream.Collectors;
 
