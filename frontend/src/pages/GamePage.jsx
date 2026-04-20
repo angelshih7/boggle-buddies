@@ -360,6 +360,7 @@ export default function GamePage() {
             <span className="score-value">{formatTime(remainingTime)}</span>
           </div>
 
+          <button className="rules-btn" onClick={() => navigate('/home')}>&#8592; Home</button>
           <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
           {isGameOver && (
             <button className="rules-btn" onClick={openRecap}>Recap</button>
