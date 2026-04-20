@@ -18,7 +18,7 @@ import static org.springframework.http.HttpStatus.*;
 /**
  * REST controller for creating, joining, and retrieving Boggle games.
  *
- * <p>This controller supports solo, bot, and multiplayer game creation,
+ * <p>This controller supports solo and multiplayer game creation,
  * allows a second player to join a waiting multiplayer game, and exposes
  * endpoints for retrieving game and board information.
  */
@@ -51,7 +51,7 @@ public class GameController{
     /**
      * Supported game modes for game creation.
      */
-    public enum GameMode {SOLO, BOT, MULTIPLAYER}
+    public enum GameMode {SOLO, MULTIPLAYER}
 
     /**
      * Request body for creating a new game.
@@ -245,9 +245,9 @@ public class GameController{
     }
 
     /**
-     * Creates a new game in solo, bot, or multiplayer mode.
+     * Creates a new game in solo or multiplayer mode.
      *
-     * <p>Solo and bot games begin immediately. Multiplayer games are created
+     * <p>Solo games begin immediately. Multiplayer games are created
      * in a waiting state until a second player joins.
      *
      * @param request the game creation request
