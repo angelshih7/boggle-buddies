@@ -4,10 +4,11 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/*
-Represents a persisted Boggle Game row in the game table, including game layout and creation time.
-game table stores the id, player1 and player2 for the gaming session.
-Stores board and winner of game and current status of game
+/**
+ * Represents a persisted Boggle game row in the games table.
+ *
+ * <p>Stores player assignments, the associated board, game status,
+ * timestamps for creation, start, and finish, and the winner when applicable.
  */
 @Entity
 @Table(name = "games")
