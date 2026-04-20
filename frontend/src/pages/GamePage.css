@@ -284,3 +284,57 @@
   color: #4b5563;
   line-height: 1.5;
 }
+
+/** Results Modal Specifics */
+.results-modal-wide {
+  width: min(640px, 95vw);
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.results-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.column-title {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1rem;
+  color: #303E77;
+  border-bottom: 2px solid #f0f2ff;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.results-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.results-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  text-transform: capitalize;
+  border-radius: 6px;
+}
+
+.results-item:nth-child(odd) {
+  background: #f8f9ff;
+}
+
+.loading-text {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-style: italic;
+}
