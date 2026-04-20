@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './WordsModal.css';
 
 export default function WordsModal({
@@ -7,11 +6,13 @@ export default function WordsModal({
   isMultiplayer = false,
   mySortedWords = [],
   opponentSortedWords = [],
+  score = 0,
+  isGameOver = false,
   onClose = null,
+  onHome = null,
+  onPlayAgain = null,
 }) {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('comparison');
-  const handleClose = () => (onClose ? onClose() : navigate('/home'));
 
   return (
     <div className="modal-overlay">
@@ -19,6 +20,9 @@ export default function WordsModal({
 
         <div id="header-style">
           <h1>Game Over</h1>
+          {isGameOver && (
+            <p className="modal-score-line">Final Score: <strong>{score}</strong></p>
+          )}
         </div>
 
         <div className="modal-tabs">
@@ -104,9 +108,20 @@ export default function WordsModal({
           </div>
         )}
 
-        <button className="modal-close-btn" onClick={handleClose}>
-          Close and Continue
-        </button>
+        {isGameOver ? (
+          <div className="modal-footer">
+            <button className="modal-footer-btn modal-footer-btn--home" onClick={onHome}>
+              Home
+            </button>
+            <button className="modal-footer-btn modal-footer-btn--play-again" onClick={onPlayAgain}>
+              {isMultiplayer ? 'New Match' : 'Play Again'}
+            </button>
+          </div>
+        ) : (
+          <button className="modal-close-btn" onClick={onClose}>
+            Close
+          </button>
+        )}
 
       </div>
     </div>
