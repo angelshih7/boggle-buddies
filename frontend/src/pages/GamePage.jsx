@@ -162,10 +162,12 @@ export default function GamePage() {
     fetchGameState();
     const interval = setInterval(fetchGameState, 1000);
     return () => clearInterval(interval);
-  }, [gameId]);
+  }, [gameId, playerId]);
 
   // ---- Recap Modal -------------------------------------------------------
+  // TODO: wire openRecap() into a game-over screen or back button
 
+  // eslint-disable-next-line no-unused-vars
   const openRecap = useCallback(async () => {
     if (gameId == null || playerId == null) return;
     try {
