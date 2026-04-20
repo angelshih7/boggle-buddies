@@ -16,6 +16,12 @@ import java.util.stream.Collectors;
 @Service
 public class WordComparisonService {
 
+    /**
+     * Contains all valid words on the board split by whether the player found them.
+     *
+     * @param foundWords  words that the player successfully submitted
+     * @param missedWords words on the board that the player did not find
+     */
     public record ComparisonResult(
         List<WordCandidate> foundWords,
         List<WordCandidate> missedWords
@@ -25,6 +31,13 @@ public class WordComparisonService {
     private final FindWordsService findWordsService;
     private final FoundWordRepository foundWordRepository;
 
+    /**
+     * Constructs a WordComparisonService with its required dependencies.
+     *
+     * @param gameService         service used to retrieve the board for a game
+     * @param findWordsService    service used to find all valid words on the board
+     * @param foundWordRepository repository used to retrieve words found by the player
+     */
     public WordComparisonService(GameService gameService,
                                  FindWordsService findWordsService,
                                  FoundWordRepository foundWordRepository) {
@@ -39,7 +52,7 @@ public class WordComparisonService {
      *
      * @param gameId   the ID of the game
      * @param playerId the ID of the player
-     * @return a ComparisonResult containing foundWords and missedWords
+     * @return a {@link ComparisonResult} containing foundWords and missedWords
      */
     public ComparisonResult compare(Integer gameId, Integer playerId) {
         String boardString = gameService.getBoard(gameId).getBoardString();
