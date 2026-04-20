@@ -141,6 +141,12 @@ public class GameController{
          */
         public Long remainingSeconds;
 
+        /** Username of player one. */
+        public String player1Username;
+
+        /** Username of player two, or {@code null} if no second player has joined. */
+        public String player2Username;
+
         /**
          * Builds a response DTO from a game entity.
          *
@@ -156,6 +162,8 @@ public class GameController{
             gameSummary.gameId = currentGame.getId();
             gameSummary.player1Id = currentGame.getPlayer1().getId();
             gameSummary.player2Id = (currentGame.getPlayer2() == null) ? null : currentGame.getPlayer2().getId();
+            gameSummary.player1Username = currentGame.getPlayer1().getUsername();
+            gameSummary.player2Username = (currentGame.getPlayer2() == null) ? null : currentGame.getPlayer2().getUsername();
             gameSummary.boardId = (currentGame.getBoard() == null) ? null : currentGame.getBoard().getBoardId();
             gameSummary.status = (currentGame.getStatus() == null) ? null : currentGame.getStatus().name();
             gameSummary.createdAt = currentGame.getCreatedAt();

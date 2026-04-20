@@ -2,9 +2,16 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './WordsModal.css';
 
-export default function WordsModal({ boardWords, comparison }) {
+export default function WordsModal({
+  comparison,
+  isMultiplayer = false,
+  mySortedWords = [],
+  opponentSortedWords = [],
+  onClose = null,
+}) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('board');
+  const [activeTab, setActiveTab] = useState('comparison');
+  const handleClose = () => (onClose ? onClose() : navigate('/home'));
 
   return (
     <div className="modal-overlay">
@@ -16,35 +23,20 @@ export default function WordsModal({ boardWords, comparison }) {
 
         <div className="modal-tabs">
           <button
-            className={`modal-tab${activeTab === 'board' ? ' modal-tab--active' : ''}`}
-            onClick={() => setActiveTab('board')}
-          >
-            Words on Board ({boardWords.length})
-          </button>
-          <button
             className={`modal-tab${activeTab === 'comparison' ? ' modal-tab--active' : ''}`}
             onClick={() => setActiveTab('comparison')}
           >
             Comparison
           </button>
+          {isMultiplayer && (
+            <button
+              className={`modal-tab${activeTab === 'vs-opponent' ? ' modal-tab--active' : ''}`}
+              onClick={() => setActiveTab('vs-opponent')}
+            >
+              vs Opponent
+            </button>
+          )}
         </div>
-
-        {activeTab === 'board' && (
-          <div className="modal-word-list">
-            {boardWords.length > 0 ? (
-              <ul>
-                {boardWords.map((item, idx) => (
-                  <li key={`${item.word}-${idx}`}>
-                    <span className="modal-word-text">{item.word}</span>
-                    <span className="modal-word-pts">+{item.points}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="modal-empty">No words found on board.</p>
-            )}
-          </div>
-        )}
 
         {activeTab === 'comparison' && (
           comparison ? (
@@ -77,11 +69,42 @@ export default function WordsModal({ boardWords, comparison }) {
               </div>
             </div>
           ) : (
-            <p className="modal-empty">Loading…</p>
+            <p className="modal-empty">Loading&hellip;</p>
           )
         )}
 
-        <button className="modal-close-btn" onClick={() => navigate('/home')}>
+        {activeTab === 'vs-opponent' && isMultiplayer && (
+          <div className="modal-comparison">
+            <div className="modal-comparison-col">
+              <h3 className="modal-comparison-title modal-comparison-title--found">
+                You ({mySortedWords.length})
+              </h3>
+              <ul>
+                {mySortedWords.map((fw, i) => (
+                  <li key={i} className="modal-comparison-item--found">
+                    <span className="modal-word-text">{fw.word}</span>
+                    <span className="modal-word-pts">+{fw.points}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="modal-comparison-col">
+              <h3 className="modal-comparison-title modal-comparison-title--missed">
+                Opponent ({opponentSortedWords.length})
+              </h3>
+              <ul>
+                {opponentSortedWords.map((fw, i) => (
+                  <li key={i} className="modal-comparison-item--missed">
+                    <span className="modal-word-text">{fw.word}</span>
+                    <span className="modal-word-pts">+{fw.points}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        <button className="modal-close-btn" onClick={handleClose}>
           Close and Continue
         </button>
 
