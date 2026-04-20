@@ -62,7 +62,8 @@ export default function HomePage() {
         }
     }
 
-    async function handleJoinMultiplayerGame() {
+    async function handleJoinMultiplayerGame(e) {
+        if (e) e.preventDefault();
         if (!user?.id) {
             alert('You must be logged in to start a game.');
             return;
@@ -81,7 +82,7 @@ export default function HomePage() {
                     clearExpiredSession(navigate);
                     return;
                 }
-                alert('Failed to create game. Please try again.');
+                alert('Failed to join game. Check the game code and try again.');
                 return;
             }
 
@@ -89,8 +90,10 @@ export default function HomePage() {
             navigate('/game', {
                 state: {
                     playerName,
-                    gameId:   data.gameId,
-                    playerId: user.id,
+                    gameId:        data.gameId,
+                    playerId:      user.id,
+                    opponentId:    data.player1Id,
+                    opponentName:  data.player1Username,
                 },
             });
         } catch {
@@ -193,7 +196,6 @@ export default function HomePage() {
                     <button
                         className="home-btn home-btn--primary"
                         type="submit"
-                        onClick={() => handleJoinMultiplayerGame()}
                         disabled={loading}
                     >
                         {loading ? 'Starting…' : '▶ Join Match'}
