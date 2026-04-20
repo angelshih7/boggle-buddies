@@ -35,6 +35,14 @@
   margin-bottom: 4px;
 }
 
+/** Avatar image */
+.player-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 /** Player name */
 .player-name {
   font-size: 1.15rem;
