@@ -177,10 +177,20 @@
   padding: 2rem 0;
 }
 
+.modal-score-line {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.modal-score-line strong {
+  color: #ffffff;
+}
+
 .modal-close-btn {
   width: 100%;
   padding: 0.875rem;
-  background: #dc2626;
+  background: #4a5fc1;
   color: #ffffff;
   font-size: clamp(0.9rem, 2vw, 1rem);
   font-weight: 700;
@@ -192,5 +202,38 @@
 }
 
 .modal-close-btn:hover {
-  background: #b91c1c;
+  background: #303E77;
+}
+
+.modal-footer {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.modal-footer-btn {
+  flex: 1;
+  padding: 0.875rem;
+  color: #ffffff;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  font-weight: 700;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  border: none;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.modal-footer-btn--home {
+  background: #6b7280;
+}
+
+.modal-footer-btn--home:hover {
+  background: #4b5563;
+}
+
+.modal-footer-btn--play-again {
+  background: #16a34a;
+}
+
+.modal-footer-btn--play-again:hover {
+  background: #15803d;
 }
