@@ -344,7 +344,8 @@ export default function GamePage() {
             <div className="word-feedback word-feedback--bad">
               Time’s up! Round over.
             </div>
-            <h2 className="player-name">{playerName}</h2>
+          )}
+          <h2 className="player-name">{playerName}</h2>
 
             <div className="score-section">
               <span className="score-label">Score</span>
