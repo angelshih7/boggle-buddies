@@ -191,6 +191,7 @@ export default function GamePage() {
   useEffect(() => {
     if (!isGameOver || recapTriggeredRef.current) return;
     recapTriggeredRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     openRecap();
   }, [isGameOver, openRecap]);
 
