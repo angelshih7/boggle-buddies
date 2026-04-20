@@ -245,7 +245,7 @@ public class GameController{
     }
 
     /**
-     * Creates a new game in solo, bot, or multiplayer mode.
+     * Creates a new game in solo or multiplayer mode.
      *
      * <p>Solo games begin immediately. Multiplayer games are created
      * in a waiting state until a second player joins.
