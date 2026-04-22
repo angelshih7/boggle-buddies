@@ -210,7 +210,7 @@ export default function HomePage() {
 
                 {/* Open games browser */}
                 <div className="waiting-games">
-                    <h3 className="waiting-games__title">Open Games</h3>
+                    <h2 className="waiting-games__title">Open Games</h2>
                     {waitingGamesLoading && <p className="waiting-games__status">Loading…</p>}
                     {!waitingGamesLoading && waitingGames.length === 0 && (
                         <p className="waiting-games__status">No open games right now.</p>
