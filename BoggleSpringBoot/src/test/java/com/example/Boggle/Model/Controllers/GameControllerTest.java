@@ -209,8 +209,8 @@ public class GameControllerTest {
 
     @Test
     void testListWaiting() {
-        GameController.ListWaitingResponse waitingResponse = gameController.listWaitingGames();
-        assertEquals(0, waitingResponse.gameIds.size());
+        List<GameController.GameResponse> waitingResponse = gameController.listWaitingGames();
+        assertEquals(0, waitingResponse.size());
 
         Board board = new Board();
         User user1 = new User("user1", "someemail@nowhere.com", "");
@@ -223,7 +223,7 @@ public class GameControllerTest {
         assertEquals(savedGame.getStatus(), GameStatus.WAITING);
 
         waitingResponse = gameController.listWaitingGames();
-        assertEquals(1, waitingResponse.gameIds.size());
+        assertEquals(1, waitingResponse.size());
 
         // Reject in-progress game
         Board board2 = new Board();
@@ -236,7 +236,7 @@ public class GameControllerTest {
         when(gameService.getWaitingGames()).thenReturn(List.of(savedGame));
 
         waitingResponse = gameController.listWaitingGames();
-        assertEquals(1, waitingResponse.gameIds.size());
+        assertEquals(1, waitingResponse.size());
     }
 
     /**
