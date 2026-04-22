@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './HomePage.css';
 import { clearExpiredSession } from '../utils/session';
@@ -16,7 +16,34 @@ export default function HomePage() {
     const [loading, setLoading] = useState(false);
     const [showMultiMenu, setShowMultiMenu] = useState(false);
     const [multiplayerGameCode, setMultiplayerGameCode] = useState('');
+    const [waitingGames, setWaitingGames] = useState([]);
+    const [waitingGamesLoading, setWaitingGamesLoading] = useState(false);
     const navigate = useNavigate();
+
+    /**
+     * Fetches the list of open (WAITING) multiplayer games whenever the multiplayer menu is opened.
+     */
+    useEffect(() => {
+        if (!showMultiMenu) return;
+
+        async function fetchWaitingGames() {
+            setWaitingGamesLoading(true);
+            try {
+                const res = await fetch('/api/game/list-waiting');
+                if (res.ok) {
+                    const data = await res.json();
+                    // Filter out games created by the current user
+                    setWaitingGames(data.filter(g => g.player1Id !== user?.id));
+                }
+            } catch {
+                // Silently fail — the list just won't populate
+            } finally {
+                setWaitingGamesLoading(false);
+            }
+        }
+
+        fetchWaitingGames();
+    }, [showMultiMenu]);
 
     /**
      * Creates a game via POST /api/game, then navigates to GamePage.
@@ -62,16 +89,18 @@ export default function HomePage() {
         }
     }
 
-    async function handleJoinMultiplayerGame(e) {
+    async function handleJoinMultiplayerGame(e, gameIdOverride) {
         if (e) e.preventDefault();
         if (!user?.id) {
             alert('You must be logged in to start a game.');
             return;
         }
 
+        const gameId = gameIdOverride ?? multiplayerGameCode;
+
         setLoading(true);
         try {
-            const res = await fetch('/api/game/' + multiplayerGameCode + '/join', {
+            const res = await fetch('/api/game/' + gameId + '/join', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ playerId: user.id }),
@@ -104,7 +133,6 @@ export default function HomePage() {
     }
 
     const handleChangeMultiplayerGameCode = (event) => {
-        // Update the state with the current value of the input field
         setMultiplayerGameCode(event.target.value);
     };
 
@@ -180,6 +208,34 @@ export default function HomePage() {
                     {loading ? 'Starting…' : '▶ Create Match'}
                 </button>
 
+                {/* Open games browser */}
+                <div className="waiting-games">
+                    <h2 className="waiting-games__title">Open Games</h2>
+                    {waitingGamesLoading && <p className="waiting-games__status">Loading…</p>}
+                    {!waitingGamesLoading && waitingGames.length === 0 && (
+                        <p className="waiting-games__status">No open games right now.</p>
+                    )}
+                    {!waitingGamesLoading && waitingGames.length > 0 && (
+                        <ul className="waiting-games__list">
+                            {waitingGames.map(game => (
+                                <li key={game.gameId} className="waiting-games__item">
+                                    <span className="waiting-games__info">
+                                        <span className="waiting-games__player">{game.player1Username}</span>
+                                        <span className="waiting-games__id">#{game.gameId}</span>
+                                    </span>
+                                    <button
+                                        className="home-btn home-btn--primary waiting-games__join-btn"
+                                        onClick={(e) => handleJoinMultiplayerGame(e, game.gameId)}
+                                        disabled={loading}
+                                    >
+                                        Join
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
                 {/* Join by session code form */}
                 <form onSubmit={handleJoinMultiplayerGame}>
                     {/* Session code text input field */}
@@ -187,8 +243,8 @@ export default function HomePage() {
                         Join with a code:
                         <input
                             type="text"
-                            value={multiplayerGameCode} // The value is controlled by the state
-                            onChange={handleChangeMultiplayerGameCode} // The state is updated on every change
+                            value={multiplayerGameCode}
+                            onChange={handleChangeMultiplayerGameCode}
                         />
                     </label>
 
