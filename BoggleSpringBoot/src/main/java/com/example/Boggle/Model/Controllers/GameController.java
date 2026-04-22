@@ -43,9 +43,9 @@ public class GameController{
     public GameController(GameService gameService,
                           GameScoreService gameScoreService,
                           WordSubmissionService wordSubmissionService){
-       this.gameService = gameService;
-       this.gameScoreService = gameScoreService;
-       this.wordSubmissionService = wordSubmissionService;
+        this.gameService = gameService;
+        this.gameScoreService = gameScoreService;
+        this.wordSubmissionService = wordSubmissionService;
     }
 
     /**
@@ -312,13 +312,13 @@ public class GameController{
      * @return a list of IDs for all games that are currently in 'waiting' status
      */
     @GetMapping("/game/list-waiting")
-    public ListWaitingResponse listWaitingGames() {
+    public List<GameResponse> listWaitingGames() {
         List<Game> waitingGames = gameService.getWaitingGames();
-        ArrayList<Integer> gameIds = new ArrayList<>();
-        for (Game waitingGame : waitingGames) {
-            gameIds.add(waitingGame.getId());
+        List<GameResponse> responses = new ArrayList<>();
+        for (Game game : waitingGames) {
+            responses.add(GameResponse.GameSummaryDTO(game, gameService));
         }
-        return ListWaitingResponse.ListWaitingResponseDTO(gameIds);
+        return responses;
     }
 
     /**

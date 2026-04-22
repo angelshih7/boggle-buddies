@@ -11,7 +11,7 @@ const STORAGE_KEY = "bbUser";
 
 /**
  * LoginPage is the login page that includes a field for username, email, and password that has
- * several checks from frontend and from API before authenticating and storing user info. 
+ * several checks from frontend and from API before authenticating and storing user info.
  * Page routes to HomePage and SignupPage
  */
 export default function LoginPage() {
@@ -22,16 +22,16 @@ export default function LoginPage() {
     const navigate = useNavigate();
 
     /**
-    * Validation for login input and sends the login request
-    * On success, stores returned user to localStorage and navigate to home page
-    * On fail, display an alert
-    */
+     * Validation for login input and sends the login request
+     * On success, stores returned user to localStorage and navigate to home page
+     * On fail, display an alert
+     */
     function handleLogin(e) {
         e.preventDefault();
         const username = usernameInput.trim();
         const email = emailInput.trim();
         const password = passwordInput.trim();
-        
+
         // Basic frontend validation for needed login fields
         if (!username || !email || !password) {
             alert("Please enter a username, email, and password.");
@@ -49,7 +49,7 @@ export default function LoginPage() {
             alert(`Password should be at least ${MIN_PASSWORD_LENGTH} characters.`);
             return;
         }
-        
+
         // Basic startup call to API, currently not working due to CORS violation but implemented
         fetch(`/api/users/login`, {
             method: "POST",
@@ -99,7 +99,7 @@ export default function LoginPage() {
             if (res.status === 409) {
                 alert("Username or email already taken!");
                 return null;
-            } 
+            }
             if(res.status !== 201) {
                 alert("Something went wrong");
                 return null;
@@ -124,9 +124,9 @@ export default function LoginPage() {
 
     return (
         <div className="login-wrap">
-            <img 
+            <img
                 src="logo.png"
-                alt="An image of the Boggle Buddies logo" 
+                alt="An image of the Boggle Buddies logo"
                 style={{ width: 300 }}
             />
             <h1 className="login-title">Ready to play?</h1>
@@ -134,9 +134,9 @@ export default function LoginPage() {
                 <Form onSubmit={handleLogin}>
                     <Form.Group>
                         <Form.Label>Username:</Form.Label>
-                        <Form.Control 
+                        <Form.Control
                             className="bb-input"
-                            value={usernameInput} 
+                            value={usernameInput}
                             onChange={e => {
                                 const value = e.target.value;
                                 setUsernameInput(value);
@@ -155,7 +155,7 @@ export default function LoginPage() {
                         <Form.Label>Email:</Form.Label>
                         <Form.Control
                             className="bb-input"
-                            value={emailInput} 
+                            value={emailInput}
                             onChange={e => setEmailInput(e.target.value)}
                             placeholder="Enter your email e.g. name@example.com "
                         />
@@ -164,15 +164,15 @@ export default function LoginPage() {
                         <Form.Label>Password:</Form.Label>
                         <Form.Control
                             className="bb-input"
-                            value={passwordInput} 
+                            value={passwordInput}
                             onChange={e => setPasswordInput(e.target.value)}
                             placeholder="Enter your password"
                             type="password"
                         />
                     </Form.Group>
-                    <Button 
+                    <Button
                         className="btn-primary"
-                        disabled={!usernameInput || !emailInput || !passwordInput || usernameError} 
+                        disabled={!usernameInput || !emailInput || !passwordInput || usernameError}
                         type="submit"
                     >Log in</Button>
                 </Form>
