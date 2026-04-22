@@ -62,6 +62,7 @@ export default function GamePage() {
 
   const [letters, setLetters]             = useState(location.state?.letters ?? DEV_PLACEHOLDER);
   const [boardLoading, setBoardLoading]   = useState(() => gameId != null);
+  const [boardHidden, setBoardHidden]   = useState(false);
   const [score, setScore]                 = useState(location.state?.score ?? 0);
   const [selectedPath, setSelectedPath]   = useState([]);
   const [feedback, setFeedback]           = useState(null);
@@ -145,6 +146,7 @@ export default function GamePage() {
         if (!res.ok) return;
         const data = await res.json();
         setGameStatus(data.status ?? 'IN_PROGRESS');
+        setBoardHidden(data.status === 'WAITING');
         if (typeof data.remainingSeconds === 'number') {
           setRemainingTime(data.remainingSeconds);
         }
@@ -399,7 +401,7 @@ export default function GamePage() {
           </div>
 
           <div className={`boggle-grid${boardLoading || isGameOver ? ' boggle-grid--loading' : ''}`}>
-            {letters.map((letter, i) => {
+            {boardHidden ? '' : letters.map((letter, i) => {
               const isSelected = selectedPath.includes(i);
               const isFirst    = selectedPath[0] === i;
               const classes    = [
