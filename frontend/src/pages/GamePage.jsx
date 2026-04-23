@@ -78,6 +78,14 @@ export default function GamePage() {
   const [opponentName, setOpponentName]     = useState(location.state?.opponentName ?? null);
   const [opponentScore, setOpponentScore]   = useState(0);
 
+  const [codeCopied, setCodeCopied] = useState(false);
+  const copyGameCode = () => {
+    if (gameId == null) return;
+    navigator.clipboard.writeText(String(gameId));
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  };
+
   const isMultiplayer = opponentId != null;
   const isGameOver = gameStatus === 'FINISHED' || remainingTime <= 0;
 
@@ -361,6 +369,16 @@ export default function GamePage() {
             <span className="score-label">Time Left</span>
             <span className="score-value">{formatTime(remainingTime)}</span>
           </div>
+
+          {gameId != null && (
+                      <div className="score-section">
+                        <span className="score-label">Game Code</span>
+                        <span className="score-value" style={{ fontSize: '1rem' }}>{gameId}</span>
+                        <button className="rules-btn" onClick={copyGameCode}>
+                          {codeCopied ? '✓ Copied' : 'Copy'}
+                        </button>
+                      </div>
+                    )}
 
           <button className="rules-btn" onClick={() => { if (window.confirm('Leave the game and go home?')) navigate('/home'); }}>&#8592; Home</button>
           <button className="rules-btn" onClick={() => setShowRules(true)}>? Rules</button>
